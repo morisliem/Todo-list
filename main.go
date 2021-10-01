@@ -68,8 +68,9 @@ func main() {
 		} else {
 			w.Write([]byte("Invalid username or password"))
 		}
-
 	})
+
+	//
 
 	router.Post("/post", func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
