@@ -25,8 +25,9 @@ func main() {
 		json.NewEncoder(w).Encode(usr)
 	})
 
-	router.Get("/{username}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.RequestURI)
+	router.Get("/{username}/hciwhdco", func(w http.ResponseWriter, r *http.Request) {
+		test := chi.URLParam(r, "username")
+		fmt.Println(test)
 		fmt.Println(r)
 		json.NewEncoder(w).Encode(usr)
 	})
