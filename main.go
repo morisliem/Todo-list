@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"todo-list/pkg"
+	"todo-list/src"
 
 	"github.com/go-chi/chi"
 )
 
 func main() {
-	usr := pkg.NewUser()
+	usr := src.NewUser()
 
-	user1 := pkg.User{Username: "moris", Password: "hello123", ID: "100"}
+	user1 := src.User{Username: "moris", Password: "hello123", ID: "100"}
 
 	usr.AddUser(user1)
 
@@ -34,7 +34,7 @@ func main() {
 	router.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		loginStatus := false
-		var specificUser pkg.User
+		var specificUser src.User
 
 		json.NewDecoder(r.Body).Decode(&request)
 
@@ -53,7 +53,7 @@ func main() {
 		}
 
 		if loginStatus {
-			usr.AddUser(pkg.User{
+			usr.AddUser(src.User{
 				ID:         specificUser.ID,
 				Username:   specificUser.Username,
 				Password:   specificUser.Password,
@@ -75,7 +75,7 @@ func main() {
 
 		json.NewDecoder(r.Body).Decode(&request)
 
-		usr.AddUser(pkg.User{
+		usr.AddUser(src.User{
 			ID:       request["ID"],
 			Username: request["username"],
 			Password: request["password"],

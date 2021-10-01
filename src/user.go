@@ -1,4 +1,4 @@
-package pkg
+package src
 
 type User struct {
 	ID         string `json:ID`
