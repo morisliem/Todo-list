@@ -22,7 +22,7 @@
 
 1. User entity  
 
-   ![](./img/user entity.png)
+   ![](img/user%20entity.png)
 
    ​	As shown above, the user entitiy consists of username, password, name, email, picture, login_status as well as the todo_list.
 
