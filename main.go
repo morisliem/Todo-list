@@ -32,6 +32,9 @@ func main() {
 		json.NewEncoder(w).Encode(usr)
 	})
 
+	////
+
+	////
 	router.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		loginStatus := false
