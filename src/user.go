@@ -1,13 +1,16 @@
 package src
 
+import "time"
+
 type User struct {
-	ID         string `json:ID`
+	Id         string `json:Id`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
 	Picture    string `json:"picture"`
-	IsLoggedIn bool   `json:"loggedIn"`
+	Created_at time.Time
+	Deleted_at time.Time
 }
 
 type UserConstractor struct {
@@ -21,10 +24,10 @@ func NewUser() *UserConstractor {
 }
 
 func (r *UserConstractor) AddUser(usr User) {
-	if usr.ID == "" {
+	if usr.Id == "" {
 		panic("User Id is not found")
 	}
-	r.Users[usr.ID] = usr
+	r.Users[usr.Id] = usr
 }
 
 func (r *UserConstractor) GetUsers() map[string]User {
