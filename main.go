@@ -1,13 +1,18 @@
 package main
 
 import (
-	"context"
+	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
-var ctx = context.Background()
+// var ctx = context.Background()
 
 func main() {
 	// rdb := src.EstablishedConnection()
+	router := chi.NewRouter()
+
+	http.ListenAndServe(":8080", router)
 
 }
 
