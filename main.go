@@ -51,7 +51,7 @@ func main() {
 		res, err := src.LoginUser(ctx, rdb, login)
 
 		if err != nil {
-			w.WriteHeader(400)
+			w.WriteHeader(404)
 			json.NewEncoder(w).Encode(res)
 		}
 
