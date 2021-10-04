@@ -1,9 +1,13 @@
 package src
 
-import "time"
+import (
+	"context"
+	"time"
+
+	"github.com/go-redis/redis/v8"
+)
 
 type User struct {
-	Id         string `json:Id`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
 	Name       string `json:"name"`
@@ -13,27 +17,39 @@ type User struct {
 	Deleted_at time.Time
 }
 
-type UserConstractor struct {
-	Users map[string]User
-}
+func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {
+	err := db.HMSet(
+		ctx, usr.Username,
+		"name", usr.Name,
+		"password", usr.Password,
+		"email", usr.Email,
+		"picture", usr.Picture,
+		"created_at", usr.Created_at,
+		"deleted_at", usr.Deleted_at).Err()
 
-func NewUser() *UserConstractor {
-	return &UserConstractor{
-		Users: make(map[string]User),
+	result := map[string]string{}
+	if err != nil {
+		result["Message"] = "Failed to add"
+		return result, err
 	}
+	result["Message"] = "Successfully added"
+	return result, nil
 }
 
-func (r *UserConstractor) AddUser(usr User) {
-	if usr.Id == "" {
-		panic("User Id is not found")
+func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
+	value, err := db.HGetAll(ctx, usr).Result()
+	if err != nil {
+		panic(err)
 	}
-	r.Users[usr.Id] = usr
-}
+	result := map[string]string{}
+	if len(value) == 0 {
+		result["Message"] = "User not found"
+		return result, nil
+	}
 
-func (r *UserConstractor) GetUsers() map[string]User {
-	return r.Users
-}
+	for key, val := range value {
+		result[key] = val
+	}
 
-func (r *UserConstractor) DeleteUser(id string) {
-	delete(r.Users, id)
+	return result, nil
 }
