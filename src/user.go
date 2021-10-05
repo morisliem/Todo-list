@@ -29,7 +29,7 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 
 	result := map[string]string{}
 	if err != nil {
-		result["Message"] = "Failed to add"
+		result["Message"] = "Failed to add user"
 		return result, err
 	}
 
@@ -38,10 +38,7 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 }
 
 func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
-	value, err := db.HGetAll(ctx, usr).Result()
-	if err != nil {
-		panic(err)
-	}
+	value, _ := db.HGetAll(ctx, usr).Result()
 
 	result := map[string]string{}
 	if len(value) == 0 {
@@ -57,12 +54,12 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 }
 
 func LoginUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {
-	password, err := db.HGet(ctx, usr.Username, "password").Result()
+	password, _ := db.HGet(ctx, usr.Username, "password").Result()
 	result := map[string]string{}
 
-	if err != nil {
+	if len(password) == 0 {
 		result["Message"] = "User not found"
-		return result, err
+		return result, nil
 	}
 
 	if password != usr.Password {

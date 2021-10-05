@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
-	"time"
 	"todo-list/src"
+	"todo-list/src/handler"
 
 	"github.com/go-chi/chi"
 )
@@ -16,74 +15,12 @@ func main() {
 	rdb := src.EstablishedConnection()
 	router := chi.NewRouter()
 
-	router.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
-		json.NewDecoder(r.Body).Decode(&request)
-
-		newUser := src.User{
-			Username:   request["username"],
-			Password:   request["password"],
-			Name:       request["name"],
-			Email:      request["email"],
-			Picture:    request["picture"],
-			Created_at: time.Now(),
-		}
-
-		res, err := src.AddUser(ctx, rdb, newUser)
-
-		if err != nil {
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(res)
-		}
-		w.WriteHeader(201)
-		json.NewEncoder(w).Encode(res)
-	})
-
-	router.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
-		json.NewDecoder(r.Body).Decode(&request)
-
-		login := src.User{
-			Username: request["username"],
-			Password: request["password"],
-		}
-
-		res, err := src.LoginUser(ctx, rdb, login)
-
-		if err != nil {
-			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(res)
-		}
-
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
-
-	})
-
-	router.Post("/{username}/logout", func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, "username")
-		res, err := src.LogoutUser(ctx, rdb, username)
-
-		if err != nil {
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(res)
-		}
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
-	})
-
-	router.Get("/{username}", func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, "username")
-
-		res, err := src.GetUser(ctx, rdb, username)
-
-		if err != nil {
-			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(res["Message"])
-		}
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
-	})
+	router.Post("/register", handler.Register_user(ctx, rdb))
+	router.Post("/login", handler.Login_user(ctx, rdb))
+	router.Post("/{username}/logout", handler.Logout_user(ctx, rdb))
+	router.Get("/{username}", handler.Get_user(ctx, rdb))
+	router.Post("/{username}/workflow", handler.Add_workflow(ctx, rdb))
+	router.Get("/{username}/workflow", handler.Get_workflow(ctx, rdb))
 
 	http.ListenAndServe(":8080", router)
 
