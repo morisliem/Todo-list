@@ -9,12 +9,12 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func Login_user(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func LoginUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		json.NewDecoder(r.Body).Decode(&request)
 
-		login := src.User{
+		login := src.LoginRequest{
 			Username: request["username"],
 			Password: request["password"],
 		}

@@ -9,18 +9,20 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var ctx = context.Background()
+var (
+	ctx    = context.Background()
+	rdb    = src.EstablishedConnection()
+	router = chi.NewRouter()
+)
 
 func main() {
-	rdb := src.EstablishedConnection()
-	router := chi.NewRouter()
 
-	router.Post("/register", handler.Register_user(ctx, rdb))
-	router.Post("/login", handler.Login_user(ctx, rdb))
-	router.Post("/{username}/logout", handler.Logout_user(ctx, rdb))
-	router.Get("/{username}", handler.Get_user(ctx, rdb))
-	router.Post("/{username}/workflow", handler.Add_workflow(ctx, rdb))
-	router.Get("/{username}/workflow", handler.Get_workflow(ctx, rdb))
+	router.Post("/register", handler.RegisterUserHandler(ctx, rdb))
+	router.Post("/login", handler.LoginUserHandler(ctx, rdb))
+	router.Post("/{username}/logout", handler.LogoutUserHandler(ctx, rdb))
+	router.Get("/{username}", handler.GetUserHandler(ctx, rdb))
+	router.Post("/{username}/workflow", handler.AddWorkflowHandler(ctx, rdb))
+	router.Get("/{username}/workflow", handler.GetWorkflowHandler(ctx, rdb))
 
 	http.ListenAndServe(":8080", router)
 

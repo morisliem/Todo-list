@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func Logout_user(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func LogoutUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username := chi.URLParam(r, "username")
 		res, err := src.LogoutUser(ctx, rdb, username)

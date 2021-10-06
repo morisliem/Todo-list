@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func Get_workflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func GetWorkflowHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username := chi.URLParam(r, "username")
 

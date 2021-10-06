@@ -17,15 +17,29 @@ type User struct {
 	Deleted_at time.Time
 }
 
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+const (
+	HmapKeyUserName      = "name"
+	HmapKeyUserPassword  = "password"
+	HmapKeyUserEmail     = "email"
+	HmapKeyUserPicture   = "picture"
+	HmapKeyUserCreatedAt = "created_at"
+	HmapKeyUserDeletedAt = "deleted_at"
+)
+
 func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {
 	err := db.HMSet(
 		ctx, usr.Username,
-		"name", usr.Name,
-		"password", usr.Password,
-		"email", usr.Email,
-		"picture", usr.Picture,
-		"created_at", usr.Created_at,
-		"deleted_at", usr.Deleted_at).Err()
+		HmapKeyUserName, usr.Name,
+		HmapKeyUserPassword, usr.Password,
+		HmapKeyUserEmail, usr.Email,
+		HmapKeyUserPicture, usr.Picture,
+		HmapKeyUserCreatedAt, usr.Created_at,
+		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
 
 	result := map[string]string{}
 	if err != nil {
@@ -33,7 +47,7 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 		return result, err
 	}
 
-	result["Message"] = "Successfully added"
+	result["Message"] = SuccessfullyAdded()
 	return result, nil
 }
 
@@ -42,7 +56,7 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 
 	result := map[string]string{}
 	if len(value) == 0 {
-		result["Message"] = "User not found"
+		result["Message"] = UserNotFoundError().Error()
 		return result, nil
 	}
 
@@ -53,27 +67,27 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 	return result, nil
 }
 
-func LoginUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {
-	password, _ := db.HGet(ctx, usr.Username, "password").Result()
+func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
+	password, _ := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 	result := map[string]string{}
 
 	if len(password) == 0 {
-		result["Message"] = "User not found"
+		result["Message"] = UserNotFoundError().Error()
 		return result, nil
 	}
 
 	if password != usr.Password {
-		result["Message"] = "Invalid password"
+		result["Message"] = WrongPassword().Error()
 		return result, nil
 	}
 
-	result["Message"] = "Logged in successfully"
+	result["Message"] = SuccessfullyLogin()
 	return result, nil
 }
 
 func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
 	result := map[string]string{}
 
-	result["Message"] = "Logged out successfully"
+	result["Message"] = SuccessfullyLogout()
 	return result, nil
 }
