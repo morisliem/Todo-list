@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"todo-list/src"
+	"todo-list/src/store"
 
 	"github.com/go-redis/redis/v8"
 )
 
-func LoginUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		json.NewDecoder(r.Body).Decode(&request)
 
-		login := src.LoginRequest{
+		login := store.LoginRequest{
 			Username: request["username"],
 			Password: request["password"],
 		}
@@ -26,7 +27,7 @@ func LoginUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		res, err := src.LoginUser(ctx, rdb, login)
+		res, err := store.LoginUser(ctx, rdb, login)
 
 		if err != nil {
 			w.WriteHeader(404)

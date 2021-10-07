@@ -14,7 +14,7 @@ type UsernameError struct {
 }
 
 var (
-	UserNotFound        = errors.New("user not found")
+	// UserNotFound        = errors.New("user not found")
 	FailedToDecode      = "Failed to decode input"
 	FailedToAddUser     = "Failed to add user"
 	SuccessfullyAdded   = "Successfully added"

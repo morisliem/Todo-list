@@ -1,8 +1,9 @@
-package src
+package store
 
 import (
 	"context"
 	"time"
+	"todo-list/src"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -42,11 +43,11 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
 
 	if err != nil {
-		res := Response(FailedToAddUser)
+		res := src.Response(src.FailedToAddUser)
 		return res, err
 	}
 
-	res := Response(SuccessfullyAdded)
+	res := src.Response(src.SuccessfullyAdded)
 	return res, nil
 }
 
@@ -55,7 +56,7 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 
 	result := map[string]string{}
 	if len(value) == 0 {
-		res := Response(UserNotFoundError().Error())
+		res := src.Response(src.UserNotFoundError().Error())
 		return res, nil
 	}
 
@@ -70,21 +71,21 @@ func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[str
 	password, _ := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 
 	if len(password) == 0 {
-		res := Response(UserNotFoundError().Error())
+		res := src.Response(src.UserNotFoundError().Error())
 		return res, nil
 	}
 
 	if password != usr.Password {
-		res := Response(WrongPassword().Error())
+		res := src.Response(src.WrongPassword().Error())
 		return res, nil
 	}
 
-	res := Response(SuccessfullyLogin)
+	res := src.Response(src.SuccessfullyLogin)
 	return res, nil
 }
 
 func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
 
-	res := Response(SuccessfullyLogout)
+	res := src.Response(src.SuccessfullyLogout)
 	return res, nil
 }

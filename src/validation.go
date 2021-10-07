@@ -3,7 +3,7 @@ package src
 import "strings"
 
 func ValidateUsername(s string) error {
-	if len(s) == 0 {
+	if len(strings.TrimSpace(s)) == 0 {
 		return EmptyUsername()
 	}
 	if len(s) > 256 {
@@ -34,7 +34,7 @@ func ValidatePassword(s string) error {
 }
 
 func ValidateEmail(s string) error {
-	if len(s) == 0 {
+	if len(strings.TrimSpace(s)) == 0 {
 		return EmptyEmail()
 	}
 
@@ -50,7 +50,7 @@ func ValidateEmail(s string) error {
 }
 
 func ValidateName(s string) error {
-	if len(s) == 0 {
+	if len(strings.TrimSpace(s)) == 0 {
 		return EmptyName()
 	}
 	if !((s[0] >= 65 && s[0] <= 90) || (s[0] >= 97 && s[0] <= 122)) {
@@ -64,7 +64,7 @@ func ValidateName(s string) error {
 }
 
 func ValidateWorkflow(s string) error {
-	if len(s) == 0 {
+	if len(strings.TrimSpace(s)) == 0 {
 		return EmptyWorkflow()
 	}
 

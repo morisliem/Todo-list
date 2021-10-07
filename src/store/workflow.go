@@ -1,8 +1,9 @@
-package src
+package store
 
 import (
 	"context"
 	"fmt"
+	"todo-list/src"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -11,8 +12,8 @@ func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflo
 	checkUsername, _ := db.HGetAll(ctx, username).Result()
 
 	if len(checkUsername) == 0 {
-		temp := FailedToAddWorkflow + "," + UserNotFound.Error()
-		res := Response(temp)
+		temp := src.FailedToAddWorkflow + "," + src.UserNotFoundError().Error()
+		res := src.Response(temp)
 		return res, nil
 	}
 
@@ -21,11 +22,11 @@ func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflo
 	err := db.SAdd(ctx, key, workflow).Err()
 
 	if err != nil {
-		res := Response(FailedToAddWorkflow)
+		res := src.Response(src.FailedToAddWorkflow)
 		return res, err
 	}
 
-	res := Response(SuccessfullyAdded)
+	res := src.Response(src.SuccessfullyAdded)
 	return res, nil
 
 }
@@ -37,7 +38,7 @@ func GetWorkflow(ctx context.Context, db *redis.Client, username string) (map[st
 	workflows, _ := db.SMembers(ctx, key).Result()
 
 	if len(workflows) == 0 {
-		res := Response(WorkflowNotFoundError().Error())
+		res := src.Response(src.WorkflowNotFoundError().Error())
 		return res, nil
 	}
 

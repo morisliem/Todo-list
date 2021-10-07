@@ -6,22 +6,24 @@ import (
 	"net/http"
 	"time"
 	"todo-list/src"
+	"todo-list/src/store"
 
 	"github.com/go-redis/redis/v8"
 )
 
-func RegisterUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.FailedToDecode)
+			res := src.Response(src.FailedToDecode)
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		newUser := src.User{
+		newUser := store.User{
 			Username:   request["username"],
 			Password:   request["password"],
 			Name:       request["name"],
@@ -58,7 +60,7 @@ func RegisterUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFun
 			return
 		}
 
-		res, err := src.AddUser(ctx, rdb, newUser)
+		res, err := store.AddUser(ctx, rdb, newUser)
 
 		if err != nil {
 			w.WriteHeader(400)

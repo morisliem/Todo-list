@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"todo-list/src"
+	"todo-list/src/store"
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
 )
 
-func LogoutUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		username := chi.URLParam(r, src.URLUsername)
@@ -22,7 +23,7 @@ func LogoutUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc 
 			return
 		}
 
-		res, err := src.LogoutUser(ctx, rdb, username)
+		res, err := store.LogoutUser(ctx, rdb, username)
 
 		if err != nil {
 			w.WriteHeader(400)

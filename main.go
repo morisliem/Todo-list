@@ -17,12 +17,12 @@ var (
 
 func main() {
 
-	router.Post("/register", handler.RegisterUserHandler(ctx, rdb))
-	router.Post("/login", handler.LoginUserHandler(ctx, rdb))
-	router.Post("users/{username}/logout", handler.LogoutUserHandler(ctx, rdb))
-	router.Get("users/{username}", handler.GetUserHandler(ctx, rdb))
-	router.Post("users/{username}/workflow", handler.AddWorkflowHandler(ctx, rdb))
-	router.Get("users/{username}/workflows", handler.GetWorkflowHandler(ctx, rdb))
+	router.Post("/register", handler.RegisterUser(ctx, rdb))
+	router.Post("/login", handler.LoginUser(ctx, rdb))
+	router.Post("/users/{username}/logout", handler.LogoutUser(ctx, rdb))
+	router.Get("/users/{username}", handler.GetUser(ctx, rdb))
+	router.Post("/users/{username}/workflow", handler.AddWorkflow(ctx, rdb))
+	router.Get("/users/{username}/workflows", handler.GetWorkflow(ctx, rdb))
 
 	http.ListenAndServe(":8080", router)
 

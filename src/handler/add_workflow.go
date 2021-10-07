@@ -5,19 +5,21 @@ import (
 	"encoding/json"
 	"net/http"
 	"todo-list/src"
+	"todo-list/src/store"
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
 )
 
-func AddWorkflowHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
+func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.FailedToDecode)
+			res := src.Response(src.FailedToDecode)
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 
@@ -38,7 +40,7 @@ func AddWorkflowHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc
 			return
 		}
 
-		res, err := src.AddWorkflow(ctx, rdb, username, newWorkflow)
+		res, err := store.AddWorkflow(ctx, rdb, username, newWorkflow)
 
 		if err != nil {
 			w.WriteHeader(404)
