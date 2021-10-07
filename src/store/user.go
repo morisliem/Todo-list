@@ -47,12 +47,15 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 }
 
 func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
-	value, _ := db.HGetAll(ctx, usr).Result()
-
+	value, err := db.HGetAll(ctx, usr).Result()
 	result := map[string]string{}
+
+	if err != nil {
+		return result, err
+	}
+
 	if len(value) == 0 {
-		res := validator.Response(validator.ErrorUserNotFound.Error())
-		return res, nil
+		return result, validator.ErrorUserNotFound
 	}
 
 	for key, val := range value {

@@ -30,9 +30,19 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		res, err := store.LoginUser(ctx, rdb, login)
 
 		if err != nil {
-			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(res)
-			return
+			if err.Error() == validator.ErrorUserNotFound.Error() {
+				w.WriteHeader(404)
+				json.NewEncoder(w).Encode(res)
+				return
+			} else if err.Error() == validator.ErrorWrongPassword.Error() {
+				w.WriteHeader(404)
+				json.NewEncoder(w).Encode(res)
+				return
+			} else {
+				w.WriteHeader(500)
+				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				return
+			}
 		}
 
 		w.WriteHeader(200)

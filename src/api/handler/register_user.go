@@ -63,9 +63,15 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		res, err := store.AddUser(ctx, rdb, newUser)
 
 		if err != nil {
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(res)
+			if err.Error() == validator.FailedToAddUser {
+				w.WriteHeader(400)
+				json.NewEncoder(w).Encode(res)
+				return
+			}
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(validator.Response(err.Error()))
 			return
+
 		}
 
 		w.WriteHeader(201)

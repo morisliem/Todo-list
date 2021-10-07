@@ -43,8 +43,13 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		res, err := store.AddWorkflow(ctx, rdb, username, newWorkflow)
 
 		if err != nil {
-			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(res)
+			if err.Error() == validator.FailedToAddWorkflow {
+				w.WriteHeader(404)
+				json.NewEncoder(w).Encode(res)
+				return
+			}
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(validator.Response(err.Error()))
 			return
 		}
 

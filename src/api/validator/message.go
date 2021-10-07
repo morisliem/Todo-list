@@ -4,6 +4,10 @@ import (
 	"errors"
 )
 
+type ValidationError struct {
+	Message error
+}
+
 var (
 	ErrorUserNotFound                         = errors.New("user not found")
 	ErrorWorkflowNotFound                     = errors.New("workflow not found")

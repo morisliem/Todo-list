@@ -35,7 +35,11 @@ func GetWorkflow(ctx context.Context, db *redis.Client, username string) (map[st
 	result := map[string]string{}
 	key := username + ":workflow"
 
-	workflows, _ := db.SMembers(ctx, key).Result()
+	workflows, err := db.SMembers(ctx, key).Result()
+
+	if err != nil {
+		return map[string]string{}, err
+	}
 
 	if len(workflows) == 0 {
 		res := validator.Response(validator.ErrorWorkflowNotFound.Error())
