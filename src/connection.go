@@ -1,6 +1,8 @@
 package src
 
-import "github.com/go-redis/redis/v8"
+import (
+	"github.com/go-redis/redis/v8"
+)
 
 func EstablishedConnection() *redis.Client {
 	redis_DB := redis.NewClient(&redis.Options{
