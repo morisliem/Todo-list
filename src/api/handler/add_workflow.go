@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"todo-list/src"
+	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
 	"github.com/go-chi/chi"
@@ -18,24 +18,24 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.FailedToDecode)
+			res := validator.Response(validator.FailedToDecode)
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		username := chi.URLParam(r, src.URLUsername)
+		username := chi.URLParam(r, validator.URLUsername)
 		newWorkflow := request["workflow"]
 
-		if src.ValidateUsername(username) != nil {
+		if validator.ValidateUsername(username) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateUsername(username).Error())
+			res := validator.Response(validator.ValidateUsername(username).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		if src.ValidateWorkflow(newWorkflow) != nil {
+		if validator.ValidateWorkflow(newWorkflow) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateWorkflow(newWorkflow).Error())
+			res := validator.Response(validator.ValidateWorkflow(newWorkflow).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}

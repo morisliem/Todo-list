@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"todo-list/src"
+	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
 	"github.com/go-redis/redis/v8"
@@ -20,9 +20,9 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			Password: request["password"],
 		}
 
-		if src.ValidateUsername(login.Username) != nil {
+		if validator.ValidateUsername(login.Username) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateUsername(login.Username).Error())
+			res := validator.Response(validator.ValidateUsername(login.Username).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}

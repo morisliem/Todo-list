@@ -1,19 +1,19 @@
-package src
+package validator
 
 import "strings"
 
 func ValidateUsername(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return EmptyUsername()
+		return ErrorEmptyUsername
 	}
 	if len(s) > 256 {
-		return UsernameExceededLimit()
+		return ErrorUsernameExceededLimit
 	}
 	if len(s) < 8 {
-		return MinUsername()
+		return ErrorMinUsername
 	}
 	if !((s[0] >= 65 && s[0] <= 90) || (s[0] >= 97 && s[0] <= 122)) {
-		return UsernameFirstCharacterMustBeAplhabat()
+		return ErrorUsernameFirstCharacterMustBeAplhabat
 	}
 
 	return nil
@@ -21,13 +21,13 @@ func ValidateUsername(s string) error {
 
 func ValidatePassword(s string) error {
 	if len(s) == 0 {
-		return EmptyPassword()
+		return ErrorEmptyPassword
 	}
 	if len(s) < 8 {
-		return MinPassword()
+		return ErrorMinPassword
 	}
 	if len(s) > 256 {
-		return PasswordExceededLimit()
+		return ErrorPasswordExceededLimit
 	}
 
 	return nil
@@ -35,15 +35,15 @@ func ValidatePassword(s string) error {
 
 func ValidateEmail(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return EmptyEmail()
+		return ErrorEmptyEmail
 	}
 
 	if !strings.Contains(s, "@") {
-		return EmailWrongFormat()
+		return ErrorEmailWrongFormat
 	}
 
 	if !strings.Contains(s, ".") {
-		return EmailWrongFormat()
+		return ErrorEmailWrongFormat
 	}
 
 	return nil
@@ -51,13 +51,13 @@ func ValidateEmail(s string) error {
 
 func ValidateName(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return EmptyName()
+		return ErrorEmptyName
 	}
 	if !((s[0] >= 65 && s[0] <= 90) || (s[0] >= 97 && s[0] <= 122)) {
-		return NameFirstCharacterMustBeAplhabat()
+		return ErrorNameFirstCharacterMustBeAplhabat
 	}
 	if len(s) > 256 {
-		return NameExceededLimit()
+		return ErrorNameExceededLimit
 	}
 
 	return nil
@@ -65,7 +65,7 @@ func ValidateName(s string) error {
 
 func ValidateWorkflow(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return EmptyWorkflow()
+		return ErrorEmptyWorkflow
 	}
 
 	return nil

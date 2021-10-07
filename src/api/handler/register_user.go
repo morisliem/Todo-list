@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-	"todo-list/src"
+	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
 	"github.com/go-redis/redis/v8"
@@ -18,7 +18,7 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.FailedToDecode)
+			res := validator.Response(validator.FailedToDecode)
 			json.NewEncoder(w).Encode(res)
 			return
 		}
@@ -32,30 +32,30 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			Created_at: time.Now(),
 		}
 
-		if src.ValidateUsername(newUser.Username) != nil {
+		if validator.ValidateUsername(newUser.Username) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateUsername(newUser.Username).Error())
+			res := validator.Response(validator.ValidateUsername(newUser.Username).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		if src.ValidateName(newUser.Name) != nil {
+		if validator.ValidateName(newUser.Name) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateName(newUser.Name).Error())
+			res := validator.Response(validator.ValidateName(newUser.Name).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		if src.ValidatePassword(newUser.Password) != nil {
+		if validator.ValidatePassword(newUser.Password) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidatePassword(newUser.Password).Error())
+			res := validator.Response(validator.ValidatePassword(newUser.Password).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
-		if src.ValidateEmail(newUser.Email) != nil {
+		if validator.ValidateEmail(newUser.Email) != nil {
 			w.WriteHeader(400)
-			res := src.Response(src.ValidateEmail(newUser.Email).Error())
+			res := validator.Response(validator.ValidateEmail(newUser.Email).Error())
 			json.NewEncoder(w).Encode(res)
 			return
 		}

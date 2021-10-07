@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 	"time"
-	"todo-list/src"
+	"todo-list/src/api/validator"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -16,11 +16,6 @@ type User struct {
 	Picture    string `json:"picture"`
 	Created_at time.Time
 	Deleted_at time.Time
-}
-
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
 }
 
 const (
@@ -43,11 +38,11 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
 
 	if err != nil {
-		res := src.Response(src.FailedToAddUser)
+		res := validator.Response(validator.FailedToAddUser)
 		return res, err
 	}
 
-	res := src.Response(src.SuccessfullyAdded)
+	res := validator.Response(validator.SuccessfullyAdded)
 	return res, nil
 }
 
@@ -56,7 +51,7 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 
 	result := map[string]string{}
 	if len(value) == 0 {
-		res := src.Response(src.UserNotFoundError().Error())
+		res := validator.Response(validator.ErrorUserNotFound.Error())
 		return res, nil
 	}
 
@@ -67,25 +62,8 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 	return result, nil
 }
 
-func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
-	password, _ := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
-
-	if len(password) == 0 {
-		res := src.Response(src.UserNotFoundError().Error())
-		return res, nil
-	}
-
-	if password != usr.Password {
-		res := src.Response(src.WrongPassword().Error())
-		return res, nil
-	}
-
-	res := src.Response(src.SuccessfullyLogin)
-	return res, nil
-}
-
 func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
 
-	res := src.Response(src.SuccessfullyLogout)
+	res := validator.Response(validator.SuccessfullyLogout)
 	return res, nil
 }

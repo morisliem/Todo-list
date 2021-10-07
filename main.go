@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"todo-list/src"
-	"todo-list/src/handler"
+	"todo-list/src/api/handler"
 
 	"github.com/go-chi/chi"
 )

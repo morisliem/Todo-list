@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
-	"todo-list/src"
+	"todo-list/src/api/validator"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -12,8 +12,8 @@ func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflo
 	checkUsername, _ := db.HGetAll(ctx, username).Result()
 
 	if len(checkUsername) == 0 {
-		temp := src.FailedToAddWorkflow + "," + src.UserNotFoundError().Error()
-		res := src.Response(temp)
+		temp := validator.FailedToAddWorkflow + "," + validator.ErrorUserNotFound.Error()
+		res := validator.Response(temp)
 		return res, nil
 	}
 
@@ -22,11 +22,11 @@ func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflo
 	err := db.SAdd(ctx, key, workflow).Err()
 
 	if err != nil {
-		res := src.Response(src.FailedToAddWorkflow)
+		res := validator.Response(validator.FailedToAddWorkflow)
 		return res, err
 	}
 
-	res := src.Response(src.SuccessfullyAdded)
+	res := validator.Response(validator.SuccessfullyAdded)
 	return res, nil
 
 }
@@ -38,7 +38,7 @@ func GetWorkflow(ctx context.Context, db *redis.Client, username string) (map[st
 	workflows, _ := db.SMembers(ctx, key).Result()
 
 	if len(workflows) == 0 {
-		res := src.Response(src.WorkflowNotFoundError().Error())
+		res := validator.Response(validator.ErrorWorkflowNotFound.Error())
 		return res, nil
 	}
 
