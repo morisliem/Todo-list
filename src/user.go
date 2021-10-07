@@ -41,14 +41,13 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string
 		HmapKeyUserCreatedAt, usr.Created_at,
 		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
 
-	result := map[string]string{}
 	if err != nil {
-		result["Message"] = "Failed to add user"
-		return result, err
+		res := Response(FailedToAddUser)
+		return res, err
 	}
 
-	result["Message"] = SuccessfullyAdded()
-	return result, nil
+	res := Response(SuccessfullyAdded)
+	return res, nil
 }
 
 func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
@@ -56,8 +55,8 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 
 	result := map[string]string{}
 	if len(value) == 0 {
-		result["Message"] = UserNotFoundError().Error()
-		return result, nil
+		res := Response(UserNotFoundError().Error())
+		return res, nil
 	}
 
 	for key, val := range value {
@@ -69,25 +68,23 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]stri
 
 func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
 	password, _ := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
-	result := map[string]string{}
 
 	if len(password) == 0 {
-		result["Message"] = UserNotFoundError().Error()
-		return result, nil
+		res := Response(UserNotFoundError().Error())
+		return res, nil
 	}
 
 	if password != usr.Password {
-		result["Message"] = WrongPassword().Error()
-		return result, nil
+		res := Response(WrongPassword().Error())
+		return res, nil
 	}
 
-	result["Message"] = SuccessfullyLogin()
-	return result, nil
+	res := Response(SuccessfullyLogin)
+	return res, nil
 }
 
 func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
-	result := map[string]string{}
 
-	result["Message"] = SuccessfullyLogout()
-	return result, nil
+	res := Response(SuccessfullyLogout)
+	return res, nil
 }

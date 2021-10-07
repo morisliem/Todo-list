@@ -13,6 +13,17 @@ type UsernameError struct {
 	Message string
 }
 
+var (
+	UserNotFound        = errors.New("user not found")
+	FailedToDecode      = "Failed to decode input"
+	FailedToAddUser     = "Failed to add user"
+	SuccessfullyAdded   = "Successfully added"
+	SuccessfullyLogin   = "Logged in successfully"
+	SuccessfullyLogout  = "Logged out successfully"
+	URLUsername         = "username"
+	FailedToAddWorkflow = "Failed to add workflow"
+)
+
 func (err *UsernameError) Error() string {
 	return fmt.Sprintf("%v", err.Message)
 }
@@ -37,8 +48,24 @@ func EmptyUsername() error {
 	return errors.New("empty username")
 }
 
+func MinUsername() error {
+	return errors.New("username min 8 character")
+}
+
+func UsernameFirstCharacterMustBeAplhabat() error {
+	return errors.New("username must start from alphabet")
+}
+
+func NameFirstCharacterMustBeAplhabat() error {
+	return errors.New("name must start from alphabet")
+}
+
 func UsernameExceededLimit() error {
 	return errors.New("username max 256 character")
+}
+
+func NameExceededLimit() error {
+	return errors.New("name max 256 character")
 }
 
 func EmptyName() error {
@@ -57,18 +84,18 @@ func EmailWrongFormat() error {
 	return errors.New("email missing @ or . ")
 }
 
-func SuccessfullyAdded() string {
-	return "Successfully added"
+func EmptyWorkflow() error {
+	return errors.New("empty workflow")
 }
 
-func SuccessfullyLogin() string {
-	return "Logged in successfully"
+func WorkflowNotFoundError() error {
+	return errors.New("workflow not found")
 }
 
-func SuccessfullyLogout() string {
-	return "Logged out successfully"
-}
+func Response(s string) map[string]string {
+	result := map[string]string{}
 
-func JSONSyntaxError() string {
-	return "Failed to decode"
+	result["Message"] = s
+
+	return result
 }

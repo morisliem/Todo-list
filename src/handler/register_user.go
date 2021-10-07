@@ -17,7 +17,7 @@ func RegisterUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFun
 
 		if err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode("Failed to decode")
+			json.NewEncoder(w).Encode(src.FailedToDecode)
 			return
 		}
 
@@ -32,25 +32,29 @@ func RegisterUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFun
 
 		if src.ValidateUsername(newUser.Username) != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.ValidateUsername(request["username"]).Error())
+			res := src.Response(src.ValidateUsername(newUser.Username).Error())
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 
 		if src.ValidateName(newUser.Name) != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.ValidateName(request["name"]).Error())
+			res := src.Response(src.ValidateName(newUser.Name).Error())
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 
 		if src.ValidatePassword(newUser.Password) != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.ValidatePassword(request["password"]).Error())
+			res := src.Response(src.ValidatePassword(newUser.Password).Error())
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 
 		if src.ValidateEmail(newUser.Email) != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(src.ValidateEmail(request["email"]).Error())
+			res := src.Response(src.ValidateEmail(newUser.Email).Error())
+			json.NewEncoder(w).Encode(res)
 			return
 		}
 

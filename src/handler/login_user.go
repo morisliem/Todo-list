@@ -19,11 +19,19 @@ func LoginUserHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			Password: request["password"],
 		}
 
+		if src.ValidateUsername(login.Username) != nil {
+			w.WriteHeader(400)
+			res := src.Response(src.ValidateUsername(login.Username).Error())
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
 		res, err := src.LoginUser(ctx, rdb, login)
 
 		if err != nil {
 			w.WriteHeader(404)
 			json.NewEncoder(w).Encode(res)
+			return
 		}
 
 		w.WriteHeader(200)

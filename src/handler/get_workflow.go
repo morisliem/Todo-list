@@ -12,13 +12,21 @@ import (
 
 func GetWorkflowHandler(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, "username")
+		username := chi.URLParam(r, src.URLUsername)
+
+		if src.ValidateUsername(username) != nil {
+			w.WriteHeader(400)
+			res := src.Response(src.ValidateUsername(username).Error())
+			json.NewEncoder(w).Encode(res)
+			return
+		}
 
 		res, err := src.GetWorkflow(ctx, rdb, username)
 
 		if err != nil {
 			w.WriteHeader(404)
 			json.NewEncoder(w).Encode(res)
+			return
 		}
 
 		w.WriteHeader(200)
