@@ -3,12 +3,15 @@ package store
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 	"todo-list/src/api/validator"
 
 	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
 )
+
+type todoDetail map[string]string
 
 type Todo struct {
 	Id          string
@@ -83,4 +86,33 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 
 	res := validator.Response(validator.SuccessfullyAdded)
 	return res, nil
+}
+
+// Missing validation and have to clean the code
+func GetTodos(ctx context.Context, db *redis.Client, usr string) (map[string]todoDetail, error) {
+	listOfTodosTitle, err := db.HMGet(ctx, usr, HmapKeyUserTodos).Result()
+	result := map[string]todoDetail{}
+	count := 0
+
+	if err != nil {
+		return map[string]todoDetail{}, err
+	}
+
+	todo := strings.Split(fmt.Sprintf("%v", listOfTodosTitle[0]), " ")
+
+	for i, v := range todo {
+		if i%2 == 0 {
+			count++
+			key := usr + ":todo:" + fmt.Sprintf("%v", v)
+			td, _ := db.HGetAll(ctx, key).Result()
+			index := "Todo " + fmt.Sprintf("%v", count)
+			tmp := map[string]string{}
+			for key, val := range td {
+				tmp[key] = val
+			}
+			result[index] = tmp
+		}
+	}
+
+	return result, nil
 }
