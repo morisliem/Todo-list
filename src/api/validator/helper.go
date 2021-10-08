@@ -10,6 +10,7 @@ type ValidationError struct {
 
 var (
 	ErrorUserNotFound                         = errors.New("user not found")
+	ErrorTodoNotFound                         = errors.New("todo not found")
 	ErrorWorkflowNotFound                     = errors.New("workflow not found")
 	ErrorWrongPassword                        = errors.New("wrong password")
 	ErrorEmptyUsername                        = errors.New("empty username")
@@ -44,6 +45,7 @@ var (
 	SuccessfullyLogin                         = "Logged in successfully"
 	SuccessfullyLogout                        = "Logged out successfully"
 	URLUsername                               = "username"
+	URLUTodoId                                = "todoId"
 	Priority                                  = [3]string{"High", "Medium", "Low"}
 	Severity                                  = [3]string{"High", "Medium", "Low"}
 )

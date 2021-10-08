@@ -17,6 +17,7 @@ func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		username := chi.URLParam(r, validator.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateUsername(username).Error())
 			json.NewEncoder(w).Encode(res)
@@ -26,11 +27,13 @@ func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		res, err := store.LogoutUser(ctx, rdb, username)
 
 		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(res)
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(res)
 	}

@@ -24,6 +24,7 @@ type Todo struct {
 	State       string `json:"state"`
 	Created_at  time.Time
 	Deleted_at  time.Time
+	Update_at   time.Time
 }
 
 const (
@@ -32,11 +33,12 @@ const (
 	HmapKeyTodoDescription = "description"
 	HmapKeyTodoLabel       = "label"
 	HmapKeyTodoDeadline    = "deadline"
-	HmapKeyTodoSevertiy    = "severity"
+	HmapKeyTodoSeverity    = "severity"
 	HmapKeyTodoPriority    = "priority"
 	HmapKeyTodoState       = "state"
 	HmapKeyTodoCreatedAt   = "created_at"
 	HmapKeyTodoDeletedAt   = "deleted_at"
+	HmapKeyTodoUpdatedAt   = "updated_at"
 )
 
 func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[string]string, error) {
@@ -49,7 +51,7 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 		HmapKeyTodoDescription, td.Description,
 		HmapKeyTodoLabel, td.Label,
 		HmapKeyTodoDeadline, td.Deadline,
-		HmapKeyTodoSevertiy, td.Severity,
+		HmapKeyTodoSeverity, td.Severity,
 		HmapKeyTodoPriority, td.Priority,
 		HmapKeyTodoState, td.State,
 		HmapKeyTodoCreatedAt, td.Created_at,
@@ -88,7 +90,6 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 	return res, nil
 }
 
-// Missing validation and have to clean the code
 func GetTodos(ctx context.Context, db *redis.Client, usr string) (map[string]todoDetail, error) {
 	listOfTodosTitle, err := db.HMGet(ctx, usr, HmapKeyUserTodos).Result()
 	result := map[string]todoDetail{}
@@ -103,10 +104,16 @@ func GetTodos(ctx context.Context, db *redis.Client, usr string) (map[string]tod
 	for i, v := range todo {
 		if i%2 == 0 {
 			count++
-			key := usr + ":todo:" + fmt.Sprintf("%v", v)
-			td, _ := db.HGetAll(ctx, key).Result()
-			index := "Todo " + fmt.Sprintf("%v", count)
 			tmp := map[string]string{}
+			key := usr + ":todo:" + fmt.Sprintf("%v", v)
+			index := "Todo " + fmt.Sprintf("%v", count)
+
+			td, err := db.HGetAll(ctx, key).Result()
+
+			if err != nil {
+				return map[string]todoDetail{}, validator.ErrorTodoNotFound
+			}
+
 			for key, val := range td {
 				tmp[key] = val
 			}
@@ -115,4 +122,74 @@ func GetTodos(ctx context.Context, db *redis.Client, usr string) (map[string]tod
 	}
 
 	return result, nil
+}
+
+func GetTodo(ctx context.Context, db *redis.Client, usr string, todoId string) (map[string]string, error) {
+	key := usr + ":todo:" + fmt.Sprintf("%v", todoId)
+
+	todo, err := db.HGetAll(ctx, key).Result()
+
+	if len(todo) == 0 {
+		return map[string]string{}, validator.ErrorTodoNotFound
+	}
+
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	return todo, nil
+}
+
+// Missing validation (Half done)
+func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string, td Todo) (map[string]string, error) {
+	key := usr + ":todo:" + fmt.Sprintf("%v", todoId)
+	dataToUpdate := map[string]string{}
+
+	todo, err := db.HGetAll(ctx, key).Result()
+
+	if len(todo) == 0 {
+		return map[string]string{}, validator.ErrorTodoNotFound
+	}
+
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	if len(strings.TrimSpace(td.Title)) != 0 {
+		dataToUpdate[HmapKeyTodoTitle] = td.Title
+	}
+
+	if len(strings.TrimSpace(td.Description)) != 0 {
+		dataToUpdate[HmapKeyTodoDescription] = td.Description
+	}
+
+	if len(strings.TrimSpace(td.Label)) != 0 {
+		dataToUpdate[HmapKeyTodoLabel] = td.Label
+	}
+
+	if len(strings.TrimSpace(td.Deadline)) != 0 {
+		dataToUpdate[HmapKeyTodoDeadline] = td.Deadline
+	}
+
+	if len(strings.TrimSpace(td.Priority)) != 0 {
+		dataToUpdate[HmapKeyTodoPriority] = td.Priority
+	}
+
+	if len(strings.TrimSpace(td.Severity)) != 0 {
+		dataToUpdate[HmapKeyTodoSeverity] = td.Severity
+	}
+
+	dataToUpdate[HmapKeyTodoUpdatedAt] = fmt.Sprintf("%v", time.Now())
+
+	fmt.Println(dataToUpdate)
+
+	for i, k := range dataToUpdate {
+		err := db.HMSet(ctx, key, i, k).Err()
+
+		if err != nil {
+			return map[string]string{}, err
+		}
+	}
+
+	return map[string]string{}, nil
 }

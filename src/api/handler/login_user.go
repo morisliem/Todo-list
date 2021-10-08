@@ -21,6 +21,7 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		if validator.ValidateUsername(login.Username) != nil {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateUsername(login.Username).Error())
 			json.NewEncoder(w).Encode(res)
@@ -31,20 +32,26 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorUserNotFound.Error() {
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(404)
 				json.NewEncoder(w).Encode(res)
 				return
+
 			} else if err.Error() == validator.ErrorWrongPassword.Error() {
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(404)
 				json.NewEncoder(w).Encode(res)
 				return
+
 			} else {
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(500)
 				json.NewEncoder(w).Encode(validator.Response(err.Error()))
 				return
 			}
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(res)
 
