@@ -15,10 +15,6 @@ type LoginRequest struct {
 func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
 	password, err := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 
-	if err != nil {
-		return map[string]string{}, err
-	}
-
 	if len(password) == 0 {
 		res := validator.Response(validator.ErrorUserNotFound.Error())
 		return res, nil
@@ -27,6 +23,10 @@ func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[str
 	if password != usr.Password {
 		res := validator.Response(validator.ErrorWrongPassword.Error())
 		return res, nil
+	}
+
+	if err != nil {
+		return map[string]string{}, err
 	}
 
 	res := validator.Response(validator.SuccessfullyLogin)

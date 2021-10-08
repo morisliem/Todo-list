@@ -16,6 +16,7 @@ type User struct {
 	Picture    string `json:"picture"`
 	Created_at time.Time
 	Deleted_at time.Time
+	Todo_lists string
 }
 
 const (
@@ -25,6 +26,7 @@ const (
 	HmapKeyUserPicture   = "picture"
 	HmapKeyUserCreatedAt = "created_at"
 	HmapKeyUserDeletedAt = "deleted_at"
+	HmapKeyUserTodos     = "todosId"
 )
 
 func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {

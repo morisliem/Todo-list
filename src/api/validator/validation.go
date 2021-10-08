@@ -1,6 +1,9 @@
 package validator
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 func ValidateUsername(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
@@ -66,6 +69,70 @@ func ValidateName(s string) error {
 func ValidateWorkflow(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
 		return ErrorEmptyWorkflow
+	}
+
+	return nil
+}
+
+func ValidateTodoTitle(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptyTitle
+	}
+
+	if len(s) > 256 {
+		return ErrorTitleExceededLimit
+	}
+
+	return nil
+}
+
+func ValidateTodoState(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptyState
+	}
+
+	return nil
+}
+
+func ValidateTodoPriority(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptyPriority
+	}
+	for _, value := range Priority {
+		if strings.EqualFold(value, s) {
+			return nil
+		}
+	}
+
+	return ErrorInvalidPriority
+}
+
+func ValidateTodoSeverity(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptySeverity
+	}
+	for _, value := range Severity {
+		if strings.EqualFold(value, s) {
+			return nil
+		}
+	}
+
+	return ErrorInvalidSeverity
+}
+
+func ValidateTodoDeadline(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptyDeadline
+	}
+
+	deadline, err := time.Parse("01-02-2006", s)
+
+	if err != nil {
+		return ErrorInvalidDeadline
+	}
+
+	if deadline.Before(time.Now()) {
+		return ErrorDeadlineMustBeAfterToday
 	}
 
 	return nil

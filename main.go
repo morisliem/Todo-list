@@ -23,6 +23,7 @@ func main() {
 	router.Get("/users/{username}", handler.GetUser(ctx, rdb))
 	router.Post("/users/{username}/workflow", handler.AddWorkflow(ctx, rdb))
 	router.Get("/users/{username}/workflows", handler.GetWorkflow(ctx, rdb))
+	router.Post("/users/{username}/todos", handler.AddTodo(ctx, rdb))
 
 	http.ListenAndServe(":8080", router)
 
