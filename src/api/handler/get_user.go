@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
@@ -16,11 +16,8 @@ func GetUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		username := chi.URLParam(r, validator.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateUsername(username).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
@@ -28,20 +25,14 @@ func GetUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorUserNotFound.Error() {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				response.NotFound(w, r, validator.Response(err.Error()))
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
+		response.SuccessfullyOk(w, r, res)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
@@ -19,23 +20,19 @@ func GetTodos(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorUserNotFound.Error() {
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				response.NotFound(w, r, validator.Response(err.Error()))
 				return
 
 			}
 
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
 		res, err := store.GetTodos(ctx, rdb, username)
 
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
@@ -54,15 +51,11 @@ func GetTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorUserNotFound.Error() {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				response.NotFound(w, r, validator.Response(err.Error()))
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
@@ -70,20 +63,14 @@ func GetTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorTodoNotFound.Error() {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				response.NotFound(w, r, validator.Response(err.Error()))
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
+		response.SuccessfullyOk(w, r, res)
 	}
 }

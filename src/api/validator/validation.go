@@ -137,3 +137,11 @@ func ValidateTodoDeadline(s string) error {
 
 	return nil
 }
+
+func ValidateTodoId(s string) error {
+	if len(strings.TrimSpace(s)) == 0 {
+		return ErrorEmptyTodoId
+	}
+
+	return nil
+}

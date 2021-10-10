@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
@@ -18,10 +19,8 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.FailedToDecode)
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
@@ -30,15 +29,11 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.ErrorUserNotFound.Error() {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(validator.Response(err.Error()))
+				response.NotFound(w, r, validator.Response(err.Error()))
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
@@ -54,42 +49,32 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		if validator.ValidateTodoTitle(newTodo.Title) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateTodoTitle(newTodo.Title).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoPriority(newTodo.Priority) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateTodoPriority(newTodo.Priority).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoSeverity(newTodo.Severity) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateTodoSeverity(newTodo.Severity).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoDeadline(newTodo.Deadline) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateTodoDeadline(newTodo.Deadline).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoState(newTodo.State) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateTodoState(newTodo.State).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
@@ -97,28 +82,18 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.FailedToAddTodo {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(400)
-				json.NewEncoder(w).Encode(res)
+				response.BadRequest(w, r, res)
 				return
 
 			}
 			if err.Error() == validator.FailedToUpdateUserTodo {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(400)
-				json.NewEncoder(w).Encode(res)
+				response.BadRequest(w, r, res)
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.BadRequest(w, r, validator.Response(err.Error()))
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(201)
-		json.NewEncoder(w).Encode(res)
-
+		response.SuccessfullyCreated(w, r, res)
 	}
 }

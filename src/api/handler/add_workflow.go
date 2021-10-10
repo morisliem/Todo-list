@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
@@ -17,10 +18,8 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.FailedToDecode)
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
@@ -28,18 +27,14 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		newWorkflow := request["workflow"]
 
 		if validator.ValidateUsername(username) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateUsername(username).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateWorkflow(newWorkflow) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateWorkflow(newWorkflow).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
@@ -47,20 +42,13 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		if err != nil {
 			if err.Error() == validator.FailedToAddWorkflow {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(res)
+				response.NotFound(w, r, res)
 				return
 			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(validator.Response(err.Error()))
+			response.ServerError(w, r, validator.Response(err.Error()))
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(201)
-		json.NewEncoder(w).Encode(res)
+		response.SuccessfullyCreated(w, r, res)
 	}
 }

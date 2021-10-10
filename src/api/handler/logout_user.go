@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
@@ -17,24 +17,18 @@ func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		username := chi.URLParam(r, validator.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
 			res := validator.Response(validator.ValidateUsername(username).Error())
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
 		res, err := store.LogoutUser(ctx, rdb, username)
 
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(res)
+			response.BadRequest(w, r, res)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
+		response.SuccessfullyOk(w, r, res)
 	}
 }

@@ -140,7 +140,6 @@ func GetTodo(ctx context.Context, db *redis.Client, usr string, todoId string) (
 	return todo, nil
 }
 
-// Missing validation (Half done)
 func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string, td Todo) (map[string]string, error) {
 	key := usr + ":todo:" + fmt.Sprintf("%v", todoId)
 	dataToUpdate := map[string]string{}
@@ -181,8 +180,6 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 
 	dataToUpdate[HmapKeyTodoUpdatedAt] = fmt.Sprintf("%v", time.Now())
 
-	fmt.Println(dataToUpdate)
-
 	for i, k := range dataToUpdate {
 		err := db.HMSet(ctx, key, i, k).Err()
 
@@ -191,5 +188,5 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 		}
 	}
 
-	return map[string]string{}, nil
+	return validator.Response(validator.SuccessfullyUpdated), nil
 }

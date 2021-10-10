@@ -4,10 +4,6 @@ import (
 	"errors"
 )
 
-type ValidationError struct {
-	Message error
-}
-
 var (
 	ErrorUserNotFound                         = errors.New("user not found")
 	ErrorTodoNotFound                         = errors.New("todo not found")
@@ -23,6 +19,7 @@ var (
 	ErrorEmptyPriority                        = errors.New("empty priority")
 	ErrorEmptySeverity                        = errors.New("empty severity")
 	ErrorEmptyDeadline                        = errors.New("empty Deadline")
+	ErrorEmptyTodoId                          = errors.New("empty TodoId")
 	ErrorMinUsername                          = errors.New("username min 8 character")
 	ErrorMinPassword                          = errors.New("password min 8 character")
 	ErrorUsernameExceededLimit                = errors.New("username max 256 character")
@@ -42,6 +39,7 @@ var (
 	FailedToAddWorkflow                       = "Failed to add workflow"
 	FailedToUpdateUserTodo                    = "Failed to update user todo"
 	SuccessfullyAdded                         = "Successfully added"
+	SuccessfullyUpdated                       = "Successfully updated"
 	SuccessfullyLogin                         = "Logged in successfully"
 	SuccessfullyLogout                        = "Logged out successfully"
 	URLUsername                               = "username"
