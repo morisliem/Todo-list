@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
@@ -13,26 +14,29 @@ import (
 
 func GetWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, validator.URLUsername)
+		username := chi.URLParam(r, response.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
-			res := validator.Response(validator.ValidateUsername(username).Error())
-			response.BadRequest(w, r, res)
+			response.BadRequest(w, r, response.Response(validator.ValidateUsername(username).Error()))
 			return
 		}
 
 		res, err := store.GetWorkflow(ctx, rdb, username)
 
 		if err != nil {
-			if err.Error() == validator.ErrorWorkflowNotFound.Error() {
-				response.NotFound(w, r, res)
+			if err == response.ErrorWorkflowNotFound {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(404)
+				json.NewEncoder(w).Encode(res)
 				return
 
 			}
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 
-		response.SuccessfullyOk(w, r, res)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(res)
 	}
 }

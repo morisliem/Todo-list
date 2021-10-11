@@ -1,8 +1,32 @@
-package validator
+package response
 
 import (
 	"errors"
 )
+
+type DataStoreError struct {
+	Message string
+}
+
+type ServerInternalError struct {
+	Message string
+}
+
+type BadInputError struct {
+	Message string
+}
+
+func (d *DataStoreError) Error() string {
+	return d.Message
+}
+
+func (d *ServerInternalError) Error() string {
+	return d.Message
+}
+
+func (d *BadInputError) Error() string {
+	return d.Message
+}
 
 var (
 	ErrorUserNotFound                         = errors.New("user not found")
@@ -33,11 +57,13 @@ var (
 	ErrorInvalidSeverity                      = errors.New("invalid value for severity")
 	ErrorInvalidDeadline                      = errors.New("invalid deadline")
 	ErrorDeadlineMustBeAfterToday             = errors.New("deadline must be after today")
-	FailedToDecode                            = "Failed to decode input"
-	FailedToAddUser                           = "Failed to add user"
-	FailedToAddTodo                           = "Failed to add todo"
-	FailedToAddWorkflow                       = "Failed to add workflow"
-	FailedToUpdateUserTodo                    = "Failed to update user todo"
+	ErrorInternalServer                       = errors.New("internal server error")
+	ErrorFailedToDecode                       = errors.New("Failed to decode input")
+	ErrorFailedToAddUser                      = errors.New("Failed to add user")
+	ErrorFailedToAddTodo                      = errors.New("Failed to add todo")
+	ErrorFailedToAddWorkflow                  = errors.New("Failed to add workflow")
+	ErrorFailedToUpdateUserTodo               = errors.New("Failed to update user todo")
+	ErrorWorkflowNotExist                     = errors.New("Workflow does not exist")
 	SuccessfullyAdded                         = "Successfully added"
 	SuccessfullyUpdated                       = "Successfully updated"
 	SuccessfullyLogin                         = "Logged in successfully"

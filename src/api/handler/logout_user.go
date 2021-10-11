@@ -14,11 +14,10 @@ import (
 func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		username := chi.URLParam(r, validator.URLUsername)
+		username := chi.URLParam(r, response.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
-			res := validator.Response(validator.ValidateUsername(username).Error())
-			response.BadRequest(w, r, res)
+			response.BadRequest(w, r, response.Response(validator.ValidateUsername(username).Error()))
 			return
 		}
 

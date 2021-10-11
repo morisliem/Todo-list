@@ -19,21 +19,20 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
-			res := validator.Response(validator.FailedToDecode)
-			response.BadRequest(w, r, res)
+			response.BadRequest(w, r, response.Response(response.ErrorFailedToDecode.Error()))
 			return
 		}
 
-		username := chi.URLParam(r, validator.URLUsername)
+		username := chi.URLParam(r, response.URLUsername)
 		_, err = store.GetUser(ctx, rdb, username)
 
 		if err != nil {
-			if err.Error() == validator.ErrorUserNotFound.Error() {
-				response.NotFound(w, r, validator.Response(err.Error()))
+			if err == response.ErrorUserNotFound {
+				response.NotFound(w, r, response.Response(err.Error()))
 				return
 			}
 
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 
@@ -49,51 +48,50 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		if validator.ValidateTodoTitle(newTodo.Title) != nil {
-			res := validator.Response(validator.ValidateTodoTitle(newTodo.Title).Error())
+			res := response.Response(validator.ValidateTodoTitle(newTodo.Title).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoPriority(newTodo.Priority) != nil {
-			res := validator.Response(validator.ValidateTodoPriority(newTodo.Priority).Error())
+			res := response.Response(validator.ValidateTodoPriority(newTodo.Priority).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoSeverity(newTodo.Severity) != nil {
-			res := validator.Response(validator.ValidateTodoSeverity(newTodo.Severity).Error())
+			res := response.Response(validator.ValidateTodoSeverity(newTodo.Severity).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoDeadline(newTodo.Deadline) != nil {
-			res := validator.Response(validator.ValidateTodoDeadline(newTodo.Deadline).Error())
+			res := response.Response(validator.ValidateTodoDeadline(newTodo.Deadline).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateTodoState(newTodo.State) != nil {
-			res := validator.Response(validator.ValidateTodoState(newTodo.State).Error())
+			res := response.Response(validator.ValidateTodoState(newTodo.State).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		res, err := store.AddTodo(ctx, rdb, username, newTodo)
-
-		if err != nil {
-			if err.Error() == validator.FailedToAddTodo {
-				response.BadRequest(w, r, res)
-				return
-
-			}
-			if err.Error() == validator.FailedToUpdateUserTodo {
-				response.BadRequest(w, r, res)
-				return
-			}
-
-			response.BadRequest(w, r, validator.Response(err.Error()))
+		switch err.(type) {
+		case nil:
+			response.SuccessfullyCreated(w, r, res)
 			return
+		case *response.BadInputError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			return
+		case *response.DataStoreError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			return
+		default:
+			response.ServerError(w, r)
+			return
+
 		}
-		response.SuccessfullyCreated(w, r, res)
 	}
 }

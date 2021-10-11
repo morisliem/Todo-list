@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	"todo-list/src/api/validator"
+	"todo-list/src/api/response"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -16,12 +16,12 @@ func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[str
 	password, err := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 
 	if len(password) == 0 {
-		res := validator.Response(validator.ErrorUserNotFound.Error())
+		res := response.Response(response.ErrorUserNotFound.Error())
 		return res, nil
 	}
 
 	if password != usr.Password {
-		res := validator.Response(validator.ErrorWrongPassword.Error())
+		res := response.Response(response.ErrorWrongPassword.Error())
 		return res, nil
 	}
 
@@ -29,6 +29,6 @@ func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[str
 		return map[string]string{}, err
 	}
 
-	res := validator.Response(validator.SuccessfullyLogin)
+	res := response.Response(response.SuccessfullyLogin)
 	return res, nil
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"todo-list/src/api/response"
-	"todo-list/src/api/validator"
 	"todo-list/src/store"
 
 	"github.com/go-chi/chi"
@@ -15,24 +14,24 @@ import (
 func GetTodos(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		username := chi.URLParam(r, validator.URLUsername)
+		username := chi.URLParam(r, response.URLUsername)
 		_, err := store.GetUser(ctx, rdb, username)
 
 		if err != nil {
-			if err.Error() == validator.ErrorUserNotFound.Error() {
-				response.NotFound(w, r, validator.Response(err.Error()))
+			if err == response.ErrorUserNotFound {
+				response.NotFound(w, r, response.Response(err.Error()))
 				return
 
 			}
 
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 
 		res, err := store.GetTodos(ctx, rdb, username)
 
 		if err != nil {
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 
@@ -44,30 +43,30 @@ func GetTodos(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 func GetTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, validator.URLUsername)
-		todoId := chi.URLParam(r, validator.URLUTodoId)
+		username := chi.URLParam(r, response.URLUsername)
+		todoId := chi.URLParam(r, response.URLUTodoId)
 
 		_, err := store.GetUser(ctx, rdb, username)
 
 		if err != nil {
-			if err.Error() == validator.ErrorUserNotFound.Error() {
-				response.NotFound(w, r, validator.Response(err.Error()))
+			if err == response.ErrorUserNotFound {
+				response.NotFound(w, r, response.Response(err.Error()))
 				return
 			}
 
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 
 		res, err := store.GetTodo(ctx, rdb, username, todoId)
 
 		if err != nil {
-			if err.Error() == validator.ErrorTodoNotFound.Error() {
-				response.NotFound(w, r, validator.Response(err.Error()))
+			if err == response.ErrorTodoNotFound {
+				response.NotFound(w, r, response.Response(err.Error()))
 				return
 			}
 
-			response.ServerError(w, r, validator.Response(err.Error()))
+			response.ServerError(w, r)
 			return
 		}
 

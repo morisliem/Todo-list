@@ -3,20 +3,21 @@ package validator
 import (
 	"strings"
 	"time"
+	"todo-list/src/api/response"
 )
 
 func ValidateUsername(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyUsername
+		return response.ErrorEmptyUsername
 	}
 	if len(s) > 256 {
-		return ErrorUsernameExceededLimit
+		return response.ErrorUsernameExceededLimit
 	}
 	if len(s) < 8 {
-		return ErrorMinUsername
+		return response.ErrorMinUsername
 	}
 	if !((s[0] >= 65 && s[0] <= 90) || (s[0] >= 97 && s[0] <= 122)) {
-		return ErrorUsernameFirstCharacterMustBeAplhabat
+		return response.ErrorUsernameFirstCharacterMustBeAplhabat
 	}
 
 	return nil
@@ -24,13 +25,13 @@ func ValidateUsername(s string) error {
 
 func ValidatePassword(s string) error {
 	if len(s) == 0 {
-		return ErrorEmptyPassword
+		return response.ErrorEmptyPassword
 	}
 	if len(s) < 8 {
-		return ErrorMinPassword
+		return response.ErrorMinPassword
 	}
 	if len(s) > 256 {
-		return ErrorPasswordExceededLimit
+		return response.ErrorPasswordExceededLimit
 	}
 
 	return nil
@@ -38,15 +39,15 @@ func ValidatePassword(s string) error {
 
 func ValidateEmail(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyEmail
+		return response.ErrorEmptyEmail
 	}
 
 	if !strings.Contains(s, "@") {
-		return ErrorEmailWrongFormat
+		return response.ErrorEmailWrongFormat
 	}
 
 	if !strings.Contains(s, ".") {
-		return ErrorEmailWrongFormat
+		return response.ErrorEmailWrongFormat
 	}
 
 	return nil
@@ -54,13 +55,13 @@ func ValidateEmail(s string) error {
 
 func ValidateName(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyName
+		return response.ErrorEmptyName
 	}
 	if !((s[0] >= 65 && s[0] <= 90) || (s[0] >= 97 && s[0] <= 122)) {
-		return ErrorNameFirstCharacterMustBeAplhabat
+		return response.ErrorNameFirstCharacterMustBeAplhabat
 	}
 	if len(s) > 256 {
-		return ErrorNameExceededLimit
+		return response.ErrorNameExceededLimit
 	}
 
 	return nil
@@ -68,7 +69,7 @@ func ValidateName(s string) error {
 
 func ValidateWorkflow(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyWorkflow
+		return response.ErrorEmptyWorkflow
 	}
 
 	return nil
@@ -76,11 +77,11 @@ func ValidateWorkflow(s string) error {
 
 func ValidateTodoTitle(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyTitle
+		return response.ErrorEmptyTitle
 	}
 
 	if len(s) > 256 {
-		return ErrorTitleExceededLimit
+		return response.ErrorTitleExceededLimit
 	}
 
 	return nil
@@ -88,7 +89,7 @@ func ValidateTodoTitle(s string) error {
 
 func ValidateTodoState(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyState
+		return response.ErrorEmptyState
 	}
 
 	return nil
@@ -96,43 +97,43 @@ func ValidateTodoState(s string) error {
 
 func ValidateTodoPriority(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyPriority
+		return response.ErrorEmptyPriority
 	}
-	for _, value := range Priority {
+	for _, value := range response.Priority {
 		if strings.EqualFold(value, s) {
 			return nil
 		}
 	}
 
-	return ErrorInvalidPriority
+	return response.ErrorInvalidPriority
 }
 
 func ValidateTodoSeverity(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptySeverity
+		return response.ErrorEmptySeverity
 	}
-	for _, value := range Severity {
+	for _, value := range response.Severity {
 		if strings.EqualFold(value, s) {
 			return nil
 		}
 	}
 
-	return ErrorInvalidSeverity
+	return response.ErrorInvalidSeverity
 }
 
 func ValidateTodoDeadline(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyDeadline
+		return response.ErrorEmptyDeadline
 	}
 
 	deadline, err := time.Parse("01-02-2006", s)
 
 	if err != nil {
-		return ErrorInvalidDeadline
+		return response.ErrorInvalidDeadline
 	}
 
 	if deadline.Before(time.Now()) {
-		return ErrorDeadlineMustBeAfterToday
+		return response.ErrorDeadlineMustBeAfterToday
 	}
 
 	return nil
@@ -140,7 +141,7 @@ func ValidateTodoDeadline(s string) error {
 
 func ValidateTodoId(s string) error {
 	if len(strings.TrimSpace(s)) == 0 {
-		return ErrorEmptyTodoId
+		return response.ErrorEmptyTodoId
 	}
 
 	return nil

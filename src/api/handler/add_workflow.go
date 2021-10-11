@@ -18,37 +18,41 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
-			res := validator.Response(validator.FailedToDecode)
-			response.BadRequest(w, r, res)
+			response.BadRequest(w, r, response.Response(response.ErrorFailedToDecode.Error()))
 			return
 		}
 
-		username := chi.URLParam(r, validator.URLUsername)
+		username := chi.URLParam(r, response.URLUsername)
 		newWorkflow := request["workflow"]
 
 		if validator.ValidateUsername(username) != nil {
-			res := validator.Response(validator.ValidateUsername(username).Error())
+			res := response.Response(validator.ValidateUsername(username).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		if validator.ValidateWorkflow(newWorkflow) != nil {
-			res := validator.Response(validator.ValidateWorkflow(newWorkflow).Error())
+			res := response.Response(validator.ValidateWorkflow(newWorkflow).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
 		res, err := store.AddWorkflow(ctx, rdb, username, newWorkflow)
-
-		if err != nil {
-			if err.Error() == validator.FailedToAddWorkflow {
-				response.NotFound(w, r, res)
-				return
-			}
-			response.ServerError(w, r, validator.Response(err.Error()))
+		switch err.(type) {
+		case nil:
+			response.SuccessfullyCreated(w, r, res)
+		case *response.BadInputError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			return
+		case *response.DataStoreError:
+			response.NotFound(w, r, res)
+			return
+		case *response.ServerInternalError:
+			response.NotFound(w, r, res)
+			return
+		default:
+			response.NotFound(w, r, res)
 			return
 		}
-
-		response.SuccessfullyCreated(w, r, res)
 	}
 }

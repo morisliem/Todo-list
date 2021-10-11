@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"todo-list/src/api/validator"
+	"todo-list/src/api/response"
 
 	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
@@ -27,6 +27,9 @@ type Todo struct {
 	Update_at   time.Time
 }
 
+type AddTodoResponse struct {
+}
+
 const (
 	HmapKeyTodoId          = "id"
 	HmapKeyTodoTitle       = "title"
@@ -46,7 +49,27 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 	HmapKey := usr + ":todo:" + string(todoId)
 	var todos string
 
-	err := db.HMSet(ctx, HmapKey,
+	workflow, err := GetWorkflow(ctx, db, usr)
+	if err != nil {
+		return map[string]string{}, err
+	}
+	if len(workflow) == 0 {
+		return map[string]string{}, &response.DataStoreError{Message: response.ErrorEmptyWorkflow.Error()}
+	}
+
+	isWorklowExist := false
+	for _, v := range workflow["Workflows"] {
+		if strings.EqualFold(v, td.State) {
+			isWorklowExist = true
+			break
+		}
+	}
+
+	if !isWorklowExist {
+		return map[string]string{}, &response.BadInputError{Message: response.ErrorWorkflowNotExist.Error()}
+	}
+
+	err = db.HMSet(ctx, HmapKey,
 		HmapKeyTodoTitle, td.Title,
 		HmapKeyTodoDescription, td.Description,
 		HmapKeyTodoLabel, td.Label,
@@ -58,15 +81,13 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 		HmapKeyTodoDeletedAt, td.Deleted_at).Err()
 
 	if err != nil {
-		res := validator.Response(validator.FailedToAddTodo)
-		return res, err
+		return map[string]string{}, &response.DataStoreError{Message: response.ErrorFailedToAddTodo.Error()}
 	}
 
 	todoListFromUserHash, err := db.HMGet(ctx, usr, HmapKeyUserTodos).Result()
 
 	if err != nil {
-		res := validator.Response(validator.FailedToUpdateUserTodo)
-		return res, err
+		return map[string]string{}, &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
 	}
 
 	if todoListFromUserHash[0] == nil {
@@ -82,11 +103,10 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) (map[st
 	err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
 
 	if err != nil {
-		res := validator.Response(validator.FailedToUpdateUserTodo)
-		return res, err
+		return map[string]string{}, &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
 	}
 
-	res := validator.Response(validator.SuccessfullyAdded)
+	res := response.Response(response.SuccessfullyAdded)
 	return res, nil
 }
 
@@ -111,7 +131,7 @@ func GetTodos(ctx context.Context, db *redis.Client, usr string) (map[string]tod
 			td, err := db.HGetAll(ctx, key).Result()
 
 			if err != nil {
-				return map[string]todoDetail{}, validator.ErrorTodoNotFound
+				return map[string]todoDetail{}, response.ErrorTodoNotFound
 			}
 
 			for key, val := range td {
@@ -130,7 +150,7 @@ func GetTodo(ctx context.Context, db *redis.Client, usr string, todoId string) (
 	todo, err := db.HGetAll(ctx, key).Result()
 
 	if len(todo) == 0 {
-		return map[string]string{}, validator.ErrorTodoNotFound
+		return map[string]string{}, response.ErrorTodoNotFound
 	}
 
 	if err != nil {
@@ -147,7 +167,7 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 	todo, err := db.HGetAll(ctx, key).Result()
 
 	if len(todo) == 0 {
-		return map[string]string{}, validator.ErrorTodoNotFound
+		return map[string]string{}, response.ErrorTodoNotFound
 	}
 
 	if err != nil {
@@ -188,5 +208,5 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 		}
 	}
 
-	return validator.Response(validator.SuccessfullyUpdated), nil
+	return response.Response(response.SuccessfullyUpdated), nil
 }

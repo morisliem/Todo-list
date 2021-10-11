@@ -14,7 +14,12 @@ import (
 func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := map[string]string{}
-		json.NewDecoder(r.Body).Decode(&request)
+		err := json.NewDecoder(r.Body).Decode(&request)
+
+		if err != nil {
+			response.BadRequest(w, r, response.Response(response.ErrorFailedToDecode.Error()))
+			return
+		}
 
 		login := store.LoginRequest{
 			Username: request["username"],
@@ -22,24 +27,23 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		if validator.ValidateUsername(login.Username) != nil {
-			res := validator.Response(validator.ValidateUsername(login.Username).Error())
-			response.BadRequest(w, r, res)
+			response.BadRequest(w, r, response.Response(validator.ValidateUsername(login.Username).Error()))
 			return
 		}
 
 		res, err := store.LoginUser(ctx, rdb, login)
 
 		if err != nil {
-			if err.Error() == validator.ErrorUserNotFound.Error() {
+			if err == response.ErrorUserNotFound {
 				response.NotFound(w, r, res)
 				return
 
-			} else if err.Error() == validator.ErrorWrongPassword.Error() {
+			} else if err == response.ErrorWrongPassword {
 				response.BadRequest(w, r, res)
 				return
 
 			} else {
-				response.ServerError(w, r, validator.Response(err.Error()))
+				response.ServerError(w, r)
 				return
 			}
 		}
