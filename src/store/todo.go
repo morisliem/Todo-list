@@ -27,9 +27,6 @@ type Todo struct {
 	Update_at   time.Time
 }
 
-type AddTodoResponse struct {
-}
-
 const (
 	HmapKeyTodoId          = "id"
 	HmapKeyTodoTitle       = "title"
@@ -209,4 +206,85 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 	}
 
 	return response.Response(response.SuccessfullyUpdated), nil
+}
+
+func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string) error {
+	key := usr + ":todo:" + todoId
+
+	isUserExist, err := db.HMGet(ctx, usr, HmapKeyUserName).Result()
+
+	if isUserExist[0] == nil {
+		return &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	isTodoExist, err := db.HMGet(ctx, key, HmapKeyTodoTitle).Result()
+
+	if isTodoExist[0] == nil {
+		return &response.BadInputError{Message: response.ErrorTodoNotFound.Error()}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = db.Del(ctx, key).Err()
+
+	if err != nil {
+		return err
+	}
+
+	todoFromUserHash, err := db.HGet(ctx, usr, HmapKeyUserTodos).Result()
+	if len(todoFromUserHash) == 0 {
+		return &response.BadInputError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	tmp := strings.Split(todoFromUserHash, " ")
+	var todos string
+	if len(tmp) == 2 && tmp[0] == todoId {
+		err = db.HDel(ctx, usr, HmapKeyUserTodos).Err()
+		if err != nil {
+			return err
+		}
+	} else {
+		for i, v := range tmp {
+			if i%2 == 0 {
+				if v == todoId {
+					todos += ""
+				} else {
+					todos += fmt.Sprintf("%v ", v)
+				}
+
+			}
+
+			err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
+
+			if err != nil {
+				return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
+			}
+		}
+	}
+
+	return nil
+}
+
+func UpdateTodoState(ctx context.Context, db *redis.Client, usr string, todoId string, newState string) error {
+	key := usr + ":todo:" + todoId
+
+	todo, err := db.HGetAll(ctx, key).Result()
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(todo)
+
+	return nil
 }
