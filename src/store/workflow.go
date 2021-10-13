@@ -7,48 +7,50 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type Workflow struct {
+	Workflows []string `json:"workflow"`
+}
+
 type workFlowDetail []string
 
-func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflow string) (map[string]string, error) {
+func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflow string) error {
 	checkUsername, err := db.HGetAll(ctx, username).Result()
 
 	if len(checkUsername) == 0 {
-		return map[string]string{}, &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
+		return &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
 	}
 
 	if err != nil {
-		return map[string]string{}, err
+		return err
 	}
 
 	key := username + ":workflow"
-
 	err = db.SAdd(ctx, key, workflow).Err()
 
 	if err != nil {
-		return map[string]string{}, response.ErrorFailedToAddWorkflow
+		return &response.DataStoreError{Message: response.ErrorFailedToAddWorkflow.Error()}
 	}
 
-	res := response.Response(response.SuccessfullyAdded)
-	return res, nil
+	return nil
 
 }
 
-func GetWorkflow(ctx context.Context, db *redis.Client, username string) (map[string]workFlowDetail, error) {
-	result := map[string]workFlowDetail{}
+func GetWorkflow(ctx context.Context, db *redis.Client, username string) (Workflow, error) {
+	workflow := Workflow{}
 	key := username + ":workflow"
 
 	workflows, err := db.SMembers(ctx, key).Result()
 
 	if err != nil {
-		return map[string]workFlowDetail{}, err
+		return workflow, err
 	}
 
 	if len(workflows) == 0 {
-		return map[string]workFlowDetail{}, response.ErrorWorkflowNotFound
+		return workflow, nil
 	}
-	temp := []string{}
-	temp = append(temp, workflows...)
-	result["Workflows"] = temp
-	return result, nil
+
+	workflow.Workflows = append(workflow.Workflows, workflows...)
+
+	return workflow, nil
 
 }

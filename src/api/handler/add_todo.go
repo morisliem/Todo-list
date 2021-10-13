@@ -11,11 +11,23 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
+
+type AddTodoRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Label       string `json:"label"`
+	Deadline    string `json:"deadline"`
+	Severity    string `json:"severity"`
+	Priority    string `json:"priority"`
+	State       string `json:"state"`
+	Created_at  time.Time
+}
 
 func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
+		var request AddTodoRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
@@ -36,62 +48,72 @@ func AddTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		newTodo := store.Todo{
-			Title:       request["title"],
-			Description: request["description"],
-			Label:       request["label"],
-			Deadline:    request["deadline"],
-			Severity:    request["severity"],
-			Priority:    request["priority"],
-			State:       request["state"],
-			Created_at:  time.Now(),
-		}
+		if request.validateRequest(w, r) {
+			newTodo := store.Todo{
+				Title:       request.Title,
+				Description: request.Description,
+				Label:       request.Label,
+				Deadline:    request.Deadline,
+				Severity:    request.Severity,
+				Priority:    request.Priority,
+				State:       request.State,
+				Created_at:  time.Now(),
+			}
 
-		if validator.ValidateTodoTitle(newTodo.Title) != nil {
-			res := response.Response(validator.ValidateTodoTitle(newTodo.Title).Error())
-			response.BadRequest(w, r, res)
-			return
-		}
+			err = store.AddTodo(ctx, rdb, username, newTodo)
 
-		if validator.ValidateTodoPriority(newTodo.Priority) != nil {
-			res := response.Response(validator.ValidateTodoPriority(newTodo.Priority).Error())
-			response.BadRequest(w, r, res)
-			return
-		}
+			switch err.(type) {
+			case nil:
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(201)
+				return
+			case *response.BadInputError:
+				response.BadRequest(w, r, response.Response(err.Error()))
+				log.Error().Err(err).Msg(err.Error())
+				return
+			case *response.DataStoreError:
+				response.BadRequest(w, r, response.Response(err.Error()))
+				log.Error().Err(err).Msg(err.Error())
+				return
+			default:
+				response.ServerError(w, r)
+				log.Error().Err(err).Msg(err.Error())
+				return
 
-		if validator.ValidateTodoSeverity(newTodo.Severity) != nil {
-			res := response.Response(validator.ValidateTodoSeverity(newTodo.Severity).Error())
-			response.BadRequest(w, r, res)
-			return
-		}
-
-		if validator.ValidateTodoDeadline(newTodo.Deadline) != nil {
-			res := response.Response(validator.ValidateTodoDeadline(newTodo.Deadline).Error())
-			response.BadRequest(w, r, res)
-			return
-		}
-
-		if validator.ValidateTodoState(newTodo.State) != nil {
-			res := response.Response(validator.ValidateTodoState(newTodo.State).Error())
-			response.BadRequest(w, r, res)
-			return
-		}
-
-		res, err := store.AddTodo(ctx, rdb, username, newTodo)
-		switch err.(type) {
-		case nil:
-			response.SuccessfullyCreated(w, r, res)
-			return
-		case *response.BadInputError:
-			response.BadRequest(w, r, response.Response(err.Error()))
-			return
-		case *response.DataStoreError:
-			response.BadRequest(w, r, response.Response(err.Error()))
-			return
-		default:
-			response.ServerError(w, r)
-			return
-
+			}
 		}
 	}
+}
+
+func (td *AddTodoRequest) validateRequest(w http.ResponseWriter, r *http.Request) bool {
+	if validator.ValidateTodoTitle(td.Title) != nil {
+		res := response.Response(validator.ValidateTodoTitle(td.Title).Error())
+		response.BadRequest(w, r, res)
+		return false
+	}
+
+	if validator.ValidateTodoPriority(td.Priority) != nil {
+		res := response.Response(validator.ValidateTodoPriority(td.Priority).Error())
+		response.BadRequest(w, r, res)
+		return false
+	}
+
+	if validator.ValidateTodoSeverity(td.Severity) != nil {
+		res := response.Response(validator.ValidateTodoSeverity(td.Severity).Error())
+		response.BadRequest(w, r, res)
+		return false
+	}
+
+	if validator.ValidateTodoDeadline(td.Deadline) != nil {
+		res := response.Response(validator.ValidateTodoDeadline(td.Deadline).Error())
+		response.BadRequest(w, r, res)
+		return false
+	}
+
+	if validator.ValidateTodoState(td.State) != nil {
+		res := response.Response(validator.ValidateTodoState(td.State).Error())
+		response.BadRequest(w, r, res)
+		return false
+	}
+	return true
 }

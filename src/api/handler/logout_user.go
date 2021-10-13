@@ -9,11 +9,11 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
 
 func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		username := chi.URLParam(r, response.URLUsername)
 
 		if validator.ValidateUsername(username) != nil {
@@ -21,13 +21,21 @@ func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		res, err := store.LogoutUser(ctx, rdb, username)
+		err := store.LogoutUser(ctx, rdb, username)
 
-		if err != nil {
-			response.BadRequest(w, r, res)
+		switch err.(type) {
+		case nil:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			return
+		case *response.NotFoundError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+		default:
+			response.ServerError(w, r)
+			log.Error().Err(err).Msg(err.Error())
 			return
 		}
-
-		response.SuccessfullyOk(w, r, res)
 	}
 }

@@ -16,6 +16,10 @@ type BadInputError struct {
 	Message string
 }
 
+type NotFoundError struct {
+	Message string
+}
+
 func (d *DataStoreError) Error() string {
 	return d.Message
 }
@@ -25,6 +29,10 @@ func (d *ServerInternalError) Error() string {
 }
 
 func (d *BadInputError) Error() string {
+	return d.Message
+}
+
+func (d *NotFoundError) Error() string {
 	return d.Message
 }
 
@@ -58,12 +66,13 @@ var (
 	ErrorInvalidDeadline                      = errors.New("invalid deadline")
 	ErrorDeadlineMustBeAfterToday             = errors.New("deadline must be after today")
 	ErrorInternalServer                       = errors.New("internal server error")
-	ErrorFailedToDecode                       = errors.New("Failed to decode input")
-	ErrorFailedToAddUser                      = errors.New("Failed to add user")
-	ErrorFailedToAddTodo                      = errors.New("Failed to add todo")
-	ErrorFailedToAddWorkflow                  = errors.New("Failed to add workflow")
-	ErrorFailedToUpdateUserTodo               = errors.New("Failed to update user todo")
-	ErrorWorkflowNotExist                     = errors.New("Workflow does not exist")
+	ErrorFailedToDecode                       = errors.New("failed to decode input")
+	ErrorFailedToAddUser                      = errors.New("failed to add user")
+	ErrorFailedToAddTodo                      = errors.New("failed to add todo")
+	ErrorFailedToAddPict                      = errors.New("failed to add picture")
+	ErrorFailedToAddWorkflow                  = errors.New("failed to add workflow")
+	ErrorFailedToUpdateUserTodo               = errors.New("failed to update user todo")
+	ErrorWorkflowNotExist                     = errors.New("workflow does not exist")
 	SuccessfullyAdded                         = "Successfully added"
 	SuccessfullyUpdated                       = "Successfully updated"
 	SuccessfullyLogin                         = "Logged in successfully"

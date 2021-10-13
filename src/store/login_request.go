@@ -12,23 +12,20 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
+func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) error {
 	password, err := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 
 	if len(password) == 0 {
-		res := response.Response(response.ErrorUserNotFound.Error())
-		return res, nil
+		return &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
 	}
 
 	if password != usr.Password {
-		res := response.Response(response.ErrorWrongPassword.Error())
-		return res, nil
+		return &response.BadInputError{Message: response.ErrorWrongPassword.Error()}
 	}
 
 	if err != nil {
-		return map[string]string{}, err
+		return err
 	}
 
-	res := response.Response(response.SuccessfullyLogin)
-	return res, nil
+	return nil
 }

@@ -10,7 +10,12 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
+
+type getWorkflowResponse struct {
+	Workflow []string `json:"workflows"`
+}
 
 func GetWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -23,20 +28,24 @@ func GetWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		res, err := store.GetWorkflow(ctx, rdb, username)
 
-		if err != nil {
-			if err == response.ErrorWorkflowNotFound {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(404)
-				json.NewEncoder(w).Encode(res)
-				return
-
-			}
-			response.ServerError(w, r)
-			return
+		getWorkflowResponse := getWorkflowResponse{
+			Workflow: res.Workflows,
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
+		switch err.(type) {
+		case nil:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(getWorkflowResponse)
+			return
+		case *response.BadInputError:
+			response.NotFound(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+		default:
+			response.ServerError(w, r)
+			log.Error().Err(err).Msg(err.Error())
+			return
+		}
 	}
 }

@@ -57,30 +57,30 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (User, error) {
 	}
 
 	if len(value) == 0 {
-		return user, response.ErrorUserNotFound
+		return user, &response.NotFoundError{Message: response.ErrorUserNotFound.Error()}
 	}
 
 	for key, val := range value {
-		if key == "created_at" {
-			tmp, err := time.Parse("2006-01-02T15:04:05Z07:00", val)
+		if key == HmapKeyUserCreatedAt {
+			tmp, err := time.Parse(time.RFC3339, val)
 			if err != nil {
 				return user, err
 			}
 			user.Created_at = tmp
 		}
-		if key == "email" {
+		if key == HmapKeyUserEmail {
 			user.Email = val
 		}
-		if key == "name" {
+		if key == HmapKeyUserName {
 			user.Name = val
 		}
-		if key == "password" {
+		if key == HmapKeyUserPassword {
 			user.Password = val
 		}
-		if key == "picture" {
+		if key == HmapKeyUserPicture {
 			user.Picture = val
 		}
-		if key == "todosId" {
+		if key == HmapKeyUserTodos {
 			tmp := strings.Split(val, " ")
 			for i, v := range tmp {
 				if i%2 == 0 {
@@ -94,8 +94,30 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (User, error) {
 	return user, nil
 }
 
-func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
+func LogoutUser(ctx context.Context, db *redis.Client, usr string) error {
+	isUserExist, err := db.HGet(ctx, usr, HmapKeyUserName).Result()
 
-	res := response.Response(response.SuccessfullyLogout)
-	return res, nil
+	if len(isUserExist) == 0 {
+		return &response.NotFoundError{Message: response.ErrorUserNotFound.Error()}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
+
+func AddUserPicture(ctx context.Context, db *redis.Client, usr string, pict string) error {
+	err := db.HMSet(ctx, usr, HmapKeyUserPicture, pict).Err()
+
+	if err != nil {
+		return &response.BadInputError{Message: response.ErrorFailedToAddPict.Error()}
+	}
+
+	return nil
+}
+
+// func uploadPict() {
+
+// }

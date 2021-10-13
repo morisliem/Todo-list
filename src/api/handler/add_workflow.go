@@ -10,11 +10,16 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
+
+type AddWorkflowRequest struct {
+	Workflow string `json:"workflow"`
+}
 
 func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
+		var request AddWorkflowRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
@@ -23,7 +28,7 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		username := chi.URLParam(r, response.URLUsername)
-		newWorkflow := request["workflow"]
+		newWorkflow := request.Workflow
 
 		if validator.ValidateUsername(username) != nil {
 			res := response.Response(validator.ValidateUsername(username).Error())
@@ -31,27 +36,33 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		if validator.ValidateWorkflow(newWorkflow) != nil {
+		if validator.ValidateWorkflow(request.Workflow) != nil {
 			res := response.Response(validator.ValidateWorkflow(newWorkflow).Error())
 			response.BadRequest(w, r, res)
 			return
 		}
 
-		res, err := store.AddWorkflow(ctx, rdb, username, newWorkflow)
+		err = store.AddWorkflow(ctx, rdb, username, newWorkflow)
+
 		switch err.(type) {
 		case nil:
-			response.SuccessfullyCreated(w, r, res)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(201)
+			return
+
 		case *response.BadInputError:
-			response.BadRequest(w, r, response.Response(err.Error()))
+			response.NotFound(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
 			return
+
 		case *response.DataStoreError:
-			response.NotFound(w, r, res)
+			response.BadRequest(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
 			return
-		case *response.ServerInternalError:
-			response.NotFound(w, r, res)
-			return
+
 		default:
-			response.NotFound(w, r, res)
+			response.ServerError(w, r)
+			log.Error().Err(err).Msg(err.Error())
 			return
 		}
 	}

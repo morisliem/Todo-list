@@ -22,50 +22,23 @@ type AddUserRequest struct {
 
 func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
+		var request AddUserRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
 			response.BadRequest(w, r, response.Response(response.ErrorFailedToDecode.Error()))
-
 			log.Error().Err(err).Msg(response.ErrorFailedToDecode.Error())
 			return
 		}
 
-		newUser := AddUserRequest{
-			Username: request["username"],
-			Password: request["password"],
-			Name:     request["name"],
-			Email:    request["email"],
-			Picture:  request["picture"],
-		}
-
-		if validator.ValidateUsername(newUser.Username) != nil {
-			response.BadRequest(w, r, response.Response(validator.ValidateUsername(newUser.Username).Error()))
-			return
-		}
-
-		if validator.ValidateName(newUser.Name) != nil {
-			response.BadRequest(w, r, response.Response(validator.ValidateName(newUser.Name).Error()))
-			return
-		}
-
-		if validator.ValidatePassword(newUser.Password) != nil {
-			response.BadRequest(w, r, response.Response(validator.ValidatePassword(newUser.Password).Error()))
-			return
-		}
-
-		if validator.ValidateEmail(newUser.Email) != nil {
-			response.BadRequest(w, r, response.Response(validator.ValidateEmail(newUser.Email).Error()))
-			return
-		}
+		request.validateRequest(w, r)
 
 		temp := store.User{
-			Username: newUser.Username,
-			Password: newUser.Password,
-			Email:    newUser.Email,
-			Picture:  newUser.Picture,
-			Name:     newUser.Name,
+			Username: request.Username,
+			Password: request.Password,
+			Email:    request.Email,
+			Picture:  request.Picture,
+			Name:     request.Name,
 		}
 
 		err = store.AddUser(ctx, rdb, temp)
@@ -84,5 +57,27 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			log.Error().Err(err).Msg(err.Error())
 			return
 		}
+	}
+}
+
+func (req *AddUserRequest) validateRequest(w http.ResponseWriter, r *http.Request) {
+	if validator.ValidateUsername(req.Username) != nil {
+		response.BadRequest(w, r, response.Response(validator.ValidateUsername(req.Username).Error()))
+		return
+	}
+
+	if validator.ValidateName(req.Name) != nil {
+		response.BadRequest(w, r, response.Response(validator.ValidateName(req.Name).Error()))
+		return
+	}
+
+	if validator.ValidatePassword(req.Password) != nil {
+		response.BadRequest(w, r, response.Response(validator.ValidatePassword(req.Password).Error()))
+		return
+	}
+
+	if validator.ValidateEmail(req.Email) != nil {
+		response.BadRequest(w, r, response.Response(validator.ValidateEmail(req.Email).Error()))
+		return
 	}
 }

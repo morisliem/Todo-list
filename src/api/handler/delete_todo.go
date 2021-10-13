@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"todo-list/src/api/response"
 	"todo-list/src/api/validator"
@@ -31,15 +30,18 @@ func DeleteTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 		}
 
 		err := store.RemoveTodo(ctx, rdb, username, todoId)
+
 		switch err.(type) {
 		case nil:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(200)
 			return
-		case *response.BadInputError:
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(response.Response(err.Error()))
+		case *response.DataStoreError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+		case *response.NotFoundError:
+			response.NotFound(w, r, response.Response(err.Error()))
 			log.Error().Err(err).Msg(err.Error())
 			return
 		default:

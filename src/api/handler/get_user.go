@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
 
 type GetUserResponse struct {
@@ -46,17 +47,22 @@ func GetUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			Todo_lists: res.Todo_lists,
 		}
 
-		if err != nil {
-			if err == response.ErrorUserNotFound {
-				response.NotFound(w, r, response.Response(err.Error()))
-				return
-			}
+		switch err.(type) {
+		case nil:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(getUserResponse)
+			return
 
+		case *response.NotFoundError:
+			response.NotFound(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+
+		default:
 			response.ServerError(w, r)
+			log.Error().Err(err).Msg(err.Error())
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(getUserResponse)
 	}
 }

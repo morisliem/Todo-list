@@ -9,45 +9,51 @@ import (
 	"todo-list/src/store"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
+
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
 func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		request := map[string]string{}
+		var request loginRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
 
 		if err != nil {
 			response.BadRequest(w, r, response.Response(response.ErrorFailedToDecode.Error()))
+			log.Error().Err(err).Msg(response.ErrorFailedToDecode.Error())
 			return
 		}
 
 		login := store.LoginRequest{
-			Username: request["username"],
-			Password: request["password"],
+			Username: request.Username,
+			Password: request.Password,
 		}
 
 		if validator.ValidateUsername(login.Username) != nil {
 			response.BadRequest(w, r, response.Response(validator.ValidateUsername(login.Username).Error()))
+			log.Error().Err(validator.ValidateUsername(login.Username)).Msg(validator.ValidateUsername(login.Username).Error())
 			return
 		}
 
-		res, err := store.LoginUser(ctx, rdb, login)
+		err = store.LoginUser(ctx, rdb, login)
 
-		if err != nil {
-			if err == response.ErrorUserNotFound {
-				response.NotFound(w, r, res)
-				return
-
-			} else if err == response.ErrorWrongPassword {
-				response.BadRequest(w, r, res)
-				return
-
-			} else {
-				response.ServerError(w, r)
-				return
-			}
+		switch err.(type) {
+		case nil:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			return
+		case *response.BadInputError:
+			response.BadRequest(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+		default:
+			response.ServerError(w, r)
+			log.Error().Err(err).Msg(err.Error())
+			return
 		}
-
-		response.SuccessfullyOk(w, r, res)
 	}
 }
