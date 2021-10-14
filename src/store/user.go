@@ -82,8 +82,8 @@ func GetUser(ctx context.Context, db *redis.Client, usr string) (User, error) {
 		}
 		if key == HmapKeyUserTodos {
 			tmp := strings.Split(val, " ")
-			for i, v := range tmp {
-				if i%2 == 0 {
+			for _, v := range tmp {
+				if v != "" {
 					user.Todo_lists = append(user.Todo_lists, v)
 				}
 			}

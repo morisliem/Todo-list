@@ -43,8 +43,7 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(200)
+			response.SuccessfullyOk(w, r)
 			return
 		case *response.BadInputError:
 			response.BadRequest(w, r, response.Response(err.Error()))

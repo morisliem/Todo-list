@@ -46,8 +46,7 @@ func AddWorkflow(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(201)
+			response.SuccessfullyCreated(w, r)
 			return
 
 		case *response.BadInputError:
