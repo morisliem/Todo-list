@@ -112,12 +112,13 @@ func AddUserPicture(ctx context.Context, db *redis.Client, usr string, pict stri
 	err := db.HMSet(ctx, usr, HmapKeyUserPicture, pict).Err()
 
 	if err != nil {
-		return &response.BadInputError{Message: response.ErrorFailedToAddPict.Error()}
+		return &response.DataStoreError{Message: response.ErrorFailedToAddPict.Error()}
 	}
 
 	return nil
 }
 
-// func uploadPict() {
+// func UploadPict(ctx context.Context, db *redis.Client, usr string, picName string) error {
 
+// 	return nil
 // }
