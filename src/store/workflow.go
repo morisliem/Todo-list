@@ -2,47 +2,55 @@ package store
 
 import (
 	"context"
-	"fmt"
-	"todo-list/src"
+	"todo-list/src/api/response"
 
 	"github.com/go-redis/redis/v8"
 )
 
-func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflow string) (map[string]string, error) {
-	checkUsername, _ := db.HGetAll(ctx, username).Result()
+type Workflow struct {
+	Workflows []string `json:"workflow"`
+}
+
+type workFlowDetail []string
+
+func AddWorkflow(ctx context.Context, db *redis.Client, username string, workflow string) error {
+	checkUsername, err := db.HGetAll(ctx, username).Result()
 
 	if len(checkUsername) == 0 {
-		temp := src.FailedToAddWorkflow + "," + src.UserNotFoundError().Error()
-		res := src.Response(temp)
-		return res, nil
+		return &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
+	}
+
+	if err != nil {
+		return err
 	}
 
 	key := username + ":workflow"
-
-	err := db.SAdd(ctx, key, workflow).Err()
+	err = db.SAdd(ctx, key, workflow).Err()
 
 	if err != nil {
-		res := src.Response(src.FailedToAddWorkflow)
-		return res, err
+		return &response.DataStoreError{Message: response.ErrorFailedToAddWorkflow.Error()}
 	}
 
-	res := src.Response(src.SuccessfullyAdded)
-	return res, nil
+	return nil
 
 }
 
-func GetWorkflow(ctx context.Context, db *redis.Client, username string) (map[string]string, error) {
-	result := map[string]string{}
+func GetWorkflow(ctx context.Context, db *redis.Client, username string) (Workflow, error) {
+	workflow := Workflow{}
 	key := username + ":workflow"
 
-	workflows, _ := db.SMembers(ctx, key).Result()
+	workflows, err := db.SMembers(ctx, key).Result()
 
-	if len(workflows) == 0 {
-		res := src.Response(src.WorkflowNotFoundError().Error())
-		return res, nil
+	if err != nil {
+		return workflow, err
 	}
 
-	result["Workflows"] = fmt.Sprint(workflows)
-	return result, nil
+	if len(workflows) == 0 {
+		return workflow, nil
+	}
+
+	workflow.Workflows = append(workflow.Workflows, workflows...)
+
+	return workflow, nil
 
 }

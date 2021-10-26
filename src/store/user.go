@@ -2,25 +2,22 @@ package store
 
 import (
 	"context"
+	"strings"
 	"time"
-	"todo-list/src"
+	"todo-list/src/api/response"
 
 	"github.com/go-redis/redis/v8"
 )
 
 type User struct {
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Picture    string `json:"picture"`
-	Created_at time.Time
-	Deleted_at time.Time
-}
-
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username   string    `json:"username"`
+	Password   string    `json:"password"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	Picture    string    `json:"picture"`
+	Created_at time.Time `json:"created_at"`
+	Deleted_at time.Time `json:"deleted_at"`
+	Todo_lists []string  `json:"todo_list"`
 }
 
 const (
@@ -30,62 +27,98 @@ const (
 	HmapKeyUserPicture   = "picture"
 	HmapKeyUserCreatedAt = "created_at"
 	HmapKeyUserDeletedAt = "deleted_at"
+	HmapKeyUserTodos     = "todosId"
 )
 
-func AddUser(ctx context.Context, db *redis.Client, usr User) (map[string]string, error) {
+func AddUser(ctx context.Context, db *redis.Client, usr User) error {
+
 	err := db.HMSet(
 		ctx, usr.Username,
 		HmapKeyUserName, usr.Name,
 		HmapKeyUserPassword, usr.Password,
 		HmapKeyUserEmail, usr.Email,
 		HmapKeyUserPicture, usr.Picture,
-		HmapKeyUserCreatedAt, usr.Created_at,
+		HmapKeyUserCreatedAt, time.Now(),
 		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
 
 	if err != nil {
-		res := src.Response(src.FailedToAddUser)
-		return res, err
+		return &response.DataStoreError{Message: err.Error()}
 	}
 
-	res := src.Response(src.SuccessfullyAdded)
-	return res, nil
+	return nil
 }
 
-func GetUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
-	value, _ := db.HGetAll(ctx, usr).Result()
+func GetUser(ctx context.Context, db *redis.Client, usr string) (User, error) {
+	value, err := db.HGetAll(ctx, usr).Result()
+	user := User{}
 
-	result := map[string]string{}
+	if err != nil {
+		return user, err
+	}
+
 	if len(value) == 0 {
-		res := src.Response(src.UserNotFoundError().Error())
-		return res, nil
+		return user, &response.NotFoundError{Message: response.ErrorUserNotFound.Error()}
 	}
 
 	for key, val := range value {
-		result[key] = val
+		if key == HmapKeyUserCreatedAt {
+			tmp, err := time.Parse(time.RFC3339, val)
+			if err != nil {
+				return user, err
+			}
+			user.Created_at = tmp
+		}
+		if key == HmapKeyUserEmail {
+			user.Email = val
+		}
+		if key == HmapKeyUserName {
+			user.Name = val
+		}
+		if key == HmapKeyUserPassword {
+			user.Password = val
+		}
+		if key == HmapKeyUserPicture {
+			user.Picture = val
+		}
+		if key == HmapKeyUserTodos {
+			tmp := strings.Split(val, " ")
+			for _, v := range tmp {
+				if v != "" {
+					user.Todo_lists = append(user.Todo_lists, v)
+				}
+			}
+		}
 	}
+	user.Username = usr
 
-	return result, nil
+	return user, nil
 }
 
-func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) (map[string]string, error) {
-	password, _ := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
+func LogoutUser(ctx context.Context, db *redis.Client, usr string) error {
+	isUserExist, err := db.HGet(ctx, usr, HmapKeyUserName).Result()
 
-	if len(password) == 0 {
-		res := src.Response(src.UserNotFoundError().Error())
-		return res, nil
+	if len(isUserExist) == 0 {
+		return &response.NotFoundError{Message: response.ErrorUserNotFound.Error()}
 	}
 
-	if password != usr.Password {
-		res := src.Response(src.WrongPassword().Error())
-		return res, nil
+	if err != nil {
+		return err
 	}
 
-	res := src.Response(src.SuccessfullyLogin)
-	return res, nil
+	return nil
 }
 
-func LogoutUser(ctx context.Context, db *redis.Client, usr string) (map[string]string, error) {
+func AddUserPicture(ctx context.Context, db *redis.Client, usr string, pict string) error {
+	err := db.HMSet(ctx, usr, HmapKeyUserPicture, pict).Err()
 
-	res := src.Response(src.SuccessfullyLogout)
-	return res, nil
+	if err != nil {
+		return &response.DataStoreError{Message: response.ErrorFailedToAddPict.Error()}
+	}
+
+	return nil
 }
+
+// func UploadPict(ctx context.Context, db *redis.Client, usr string, picName string) error {
+
+// 	return nil
+// }
