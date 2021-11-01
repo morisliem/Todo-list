@@ -270,29 +270,6 @@ func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 	if err != nil {
 		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
 	}
-
-	// if len(tmp) == 2 && tmp[0] == todoId {
-	// 	err = db.HDel(ctx, usr, HmapKeyUserTodos).Err()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// } else {
-	// 	for i, v := range tmp {
-	// 		if i%2 == 0 {
-	// 			if v == todoId {
-	// 				todos += ""
-	// 			} else {
-	// 				todos += fmt.Sprintf("%v ", v)
-	// 			}
-	// 		}
-	// 	}
-	// 	err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
-
-	// 	if err != nil {
-	// 		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
-	// 	}
-	// }
-
 	return nil
 }
 
