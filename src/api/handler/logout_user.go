@@ -28,7 +28,7 @@ func LogoutUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			response.SuccessfullyOk(w, r)
 			return
 		case *response.NotFoundError:
-			response.BadRequest(w, r, response.Response(err.Error()))
+			response.NotFound(w, r, response.Response(err.Error()))
 			log.Error().Err(err).Msg(err.Error())
 			return
 		default:
