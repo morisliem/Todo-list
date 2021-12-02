@@ -38,7 +38,7 @@ func AddPicture(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			response.SuccessfullyCreated(w, r)
+			response.SuccessfullyOk(w, r)
 			return
 		case *response.DataStoreError:
 			response.BadRequest(w, r, response.Response(err.Error()))

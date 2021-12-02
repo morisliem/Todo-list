@@ -5,11 +5,13 @@ services:
     restart: on-failure
     expose:
       - 6379
-    port:
+    ports:
       - "6379:6379/tcp"
   todo-list:
     image: golang:1.17
     working_dir: /todolist
+    ports:
+      - "8080:8080/tcp"
     volumes:
       - ./:/todolist
     command: /bin/bash -c "go run ."

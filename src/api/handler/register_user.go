@@ -31,7 +31,12 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		request.validateRequest(w, r)
+		err = request.validateRequest(w, r)
+		if err != nil {
+			response.BadRequest(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
+		}
 
 		temp := store.User{
 			Username: request.Username,
@@ -45,7 +50,7 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			response.SuccessfullyCreated(w, r)
+			response.SuccessfullyOk(w, r)
 			return
 		case *response.DataStoreError:
 			response.BadRequest(w, r, response.Response(err.Error()))
@@ -59,24 +64,22 @@ func RegisterUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 	}
 }
 
-func (req *AddUserRequest) validateRequest(w http.ResponseWriter, r *http.Request) {
-	if validator.ValidateUsername(req.Username) != nil {
-		response.BadRequest(w, r, response.Response(validator.ValidateUsername(req.Username).Error()))
-		return
+func (req *AddUserRequest) validateRequest(w http.ResponseWriter, r *http.Request) error {
+	if err := validator.ValidateUsername(req.Username); err != nil {
+		return err
 	}
 
-	if validator.ValidateName(req.Name) != nil {
-		response.BadRequest(w, r, response.Response(validator.ValidateName(req.Name).Error()))
-		return
+	if err := validator.ValidateName(req.Name); err != nil {
+		return err
 	}
 
-	if validator.ValidatePassword(req.Password) != nil {
-		response.BadRequest(w, r, response.Response(validator.ValidatePassword(req.Password).Error()))
-		return
+	if err := validator.ValidatePassword(req.Password); err != nil {
+		return err
 	}
 
-	if validator.ValidateEmail(req.Email) != nil {
-		response.BadRequest(w, r, response.Response(validator.ValidateEmail(req.Email).Error()))
-		return
+	if err := validator.ValidateEmail(req.Email); err != nil {
+		return err
 	}
+
+	return nil
 }

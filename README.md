@@ -58,6 +58,12 @@ HMSET [username] name '[name]' password '[password]' email '[email]' picture '[p
 HGETALL [username]
 ```
 
+- To get specific field on user
+
+```
+HMGET [username] [fieldname]
+```
+
 2. Todo entity
 
 ![](img/redis_schema/todo.png)

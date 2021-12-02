@@ -47,7 +47,8 @@ func GetUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			response.SuccessfullyOk(w, r)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
 			json.NewEncoder(w).Encode(getUserResponse)
 			return
 

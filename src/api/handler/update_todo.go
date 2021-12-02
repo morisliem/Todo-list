@@ -69,7 +69,7 @@ func UpdateTodo(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 
 		switch err.(type) {
 		case nil:
-			response.SuccessfullyCreated(w, r)
+			response.SuccessfullyOk(w, r)
 			return
 		case *response.NotFoundError:
 			response.NotFound(w, r, response.Response(err.Error()))

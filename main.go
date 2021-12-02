@@ -29,7 +29,7 @@ func main() {
 	router.Post("/users/{username}/logout", handler.LogoutUser(ctx, rdb))
 	router.Post("/users/{username}/workflow", handler.AddWorkflow(ctx, rdb))
 	router.Post("/users/{username}/todos", handler.AddTodo(ctx, rdb))
-	router.Post("/users/{username}", handler.AddPicture(ctx, rdb))
+	router.Post("/users/{username}/picture", handler.AddPicture(ctx, rdb))
 	router.Put("/users/{username}/todos/{todoId}", handler.UpdateTodo(ctx, rdb))
 	router.Patch("/users/{username}/todos/{todoId}", handler.UpdateTodoState(ctx, rdb))
 	router.Get("/users/{username}/todos", handler.GetTodos(ctx, rdb))
