@@ -29,7 +29,7 @@ const (
 	HmapKeyTodoTitle       = "title"
 	HmapKeyTodoDescription = "description"
 	HmapKeyTodoLabel       = "label"
-	HmapKeyTodoDeadline    = "deadline"
+	HmapKeyTodoDeadline    = "deadline" // mm/dd/yyyy
 	HmapKeyTodoSeverity    = "severity"
 	HmapKeyTodoPriority    = "priority"
 	HmapKeyTodoState       = "state"
@@ -70,26 +70,20 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) error {
 		return &response.DataStoreError{Message: response.ErrorFailedToAddTodo.Error()}
 	}
 
+	// Getting the list of todoId from userhashmap
 	todoListFromUserHash, err := db.HMGet(ctx, usr, HmapKeyUserTodos).Result()
-
 	if err != nil {
 		return err
 	}
 
-	todos := updateTodoListInUserHash(todoListFromUserHash, todoId)
-
-	splitTodos := strings.Split(todos, " ")
-	var updatedTodos string
-
-	for i, v := range splitTodos {
-		if i%2 == 0 {
-			updatedTodos += v
-		} else {
-			updatedTodos += " "
-		}
+	// Adding the list of todoId with the a todoId
+	todos, err := updateUserHashTodo(todoListFromUserHash, todoId)
+	if err != nil {
+		return err
 	}
 
-	err = db.HMSet(ctx, usr, HmapKeyUserTodos, updatedTodos).Err()
+	// Adding todoId to userhashmap
+	err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
 
 	if err != nil {
 		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
@@ -156,7 +150,6 @@ func GetTodos(ctx context.Context, db *redis.Client, usr string) ([]Todo, error)
 	}
 
 	return result, nil
-
 }
 
 func GetTodo(ctx context.Context, db *redis.Client, usr string, todoId string) (Todo, error) {
@@ -173,36 +166,19 @@ func GetTodo(ctx context.Context, db *redis.Client, usr string, todoId string) (
 		return result, err
 	}
 
-	for _, v := range todo {
-		if v == HmapKeyTodoTitle {
-			result.Title = v
-		}
-		if v == HmapKeyTodoDescription {
-			result.Description = v
-		}
-		if v == HmapKeyTodoLabel {
-			result.Label = v
-		}
-		if v == HmapKeyTodoDeadline {
-			result.Deadline = v
-		}
-		if v == HmapKeyTodoSeverity {
-			result.Severity = v
-		}
-		if v == HmapKeyTodoPriority {
-			result.Priority = v
-		}
-		if v == HmapKeyTodoState {
-			result.State = v
-		}
-		if v == HmapKeyTodoCreatedAt {
-			tmp, err := time.Parse(time.RFC3339, v)
-			if err != nil {
-				return result, err
-			}
-			result.Created_at = tmp
-		}
+	result.Title = todo[HmapKeyTodoTitle]
+	result.Description = todo[HmapKeyTodoDescription]
+	result.Label = todo[HmapKeyTodoLabel]
+	result.Deadline = todo[HmapKeyTodoDeadline]
+	result.Severity = todo[HmapKeyTodoSeverity]
+	result.Priority = todo[HmapKeyTodoPriority]
+	result.State = todo[HmapKeyTodoState]
+
+	created_at, err := time.Parse(time.RFC3339, todo[HmapKeyTodoCreatedAt])
+	if err != nil {
+		return result, err
 	}
+	result.Created_at = created_at
 	result.Id = todoId
 
 	return result, nil
@@ -235,6 +211,7 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 	return nil
 }
 
+// got bug when i remove the first todoList
 func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string) error {
 	key := usr + ":todo:" + todoId
 
@@ -264,6 +241,7 @@ func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 		return err
 	}
 
+	// updating the listOfTodoId
 	todoFromUserHash, err := db.HGet(ctx, usr, HmapKeyUserTodos).Result()
 	if len(todoFromUserHash) == 0 {
 		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
@@ -273,31 +251,25 @@ func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 		return err
 	}
 
+	fmt.Println(todoFromUserHash)
+
 	tmp := strings.Split(todoFromUserHash, " ")
 	var todos string
 
-	if len(tmp) == 2 && tmp[0] == todoId {
-		err = db.HDel(ctx, usr, HmapKeyUserTodos).Err()
-		if err != nil {
-			return err
-		}
-	} else {
-		for i, v := range tmp {
-			if i%2 == 0 {
-				if v == todoId {
-					todos += ""
-				} else {
-					todos += fmt.Sprintf("%v ", v)
-				}
+	for _, v := range tmp {
+		if v != " " && v != "" {
+			if v == todoId {
+				todos += ""
+			} else {
+				todos += fmt.Sprintf("%v ", v)
 			}
-		}
-		err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
-
-		if err != nil {
-			return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
 		}
 	}
 
+	err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
+	if err != nil {
+		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}
+	}
 	return nil
 }
 
@@ -353,20 +325,22 @@ func isWorkflowExist(workFlowList workFlowDetail, workFlow string) bool {
 	return isExist
 }
 
-func updateTodoListInUserHash(todoList []interface{}, todoId string) string {
+func updateUserHashTodo(todoList []interface{}, todoId string) (string, error) {
 	var todos string
 
 	if todoList[0] == nil {
-		todoList = todoList[1:]
+		todos += todoId + " "
+		return todos, nil
+	} else {
+		tmp := strings.Split(fmt.Sprintf("%v", todoList[0]), " ")
+		for _, v := range tmp {
+			if v != " " {
+				todos += v + " "
+			}
+		}
+		todos += todoId + " "
+		return todos, nil
 	}
-
-	todoList = append(todoList, todoId)
-
-	for _, v := range todoList {
-		todos += fmt.Sprintf("%v ", v)
-	}
-
-	return todos
 }
 
 func dataToChange(dataToUpdate map[string]string, td Todo) map[string]string {

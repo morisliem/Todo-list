@@ -49,6 +49,10 @@ func LoginUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			response.BadRequest(w, r, response.Response(err.Error()))
 			log.Error().Err(err).Msg(err.Error())
 			return
+		case *response.NotFoundError:
+			response.NotFound(w, r, response.Response(err.Error()))
+			log.Error().Err(err).Msg(err.Error())
+			return
 		default:
 			response.ServerError(w, r)
 			log.Error().Err(err).Msg(err.Error())
