@@ -23,7 +23,6 @@ type getTodoResponse struct {
 	Priority    string    `json:"priority"`
 	State       string    `json:"state"`
 	Created_at  time.Time `json:"created_at"`
-	Deleted_at  time.Time `json:"deleted_at"`
 }
 
 type listOfTodo struct {
@@ -58,7 +57,6 @@ func GetTodos(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			todoTemp.Priority = v.Priority
 			todoTemp.State = v.State
 			todoTemp.Created_at = v.Created_at
-			todoTemp.Deleted_at = v.Deleted_at
 			tmp = append(tmp, todoTemp)
 		}
 		todoResponse.Todos = tmp

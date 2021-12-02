@@ -2,20 +2,27 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"todo-list/src"
 	"todo-list/src/api/handler"
 
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 )
 
 var (
-	ctx    = context.Background()
-	rdb    = src.EstablishedConnection()
-	router = chi.NewRouter()
+	ctx = context.Background()
 )
 
 func main() {
+
+	_ = godotenv.Load(".env")
+	rdb, err := src.EstablishedConnection(ctx)
+	if err != nil {
+		log.Fatalln("failed to connect to redis: ", err)
+	}
+	router := chi.NewRouter()
 
 	router.Post("/auth/register", handler.RegisterUser(ctx, rdb))
 	router.Post("/auth/login", handler.LoginUser(ctx, rdb))

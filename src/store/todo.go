@@ -21,7 +21,6 @@ type Todo struct {
 	Priority    string    `json:"priority"`
 	State       string    `json:"state"`
 	Created_at  time.Time `json:"created_at"`
-	Deleted_at  time.Time `json:"deleted_at"`
 }
 
 const (
@@ -34,7 +33,6 @@ const (
 	HmapKeyTodoPriority    = "priority"
 	HmapKeyTodoState       = "state"
 	HmapKeyTodoCreatedAt   = "created_at"
-	HmapKeyTodoDeletedAt   = "deleted_at"
 )
 
 func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) error {
@@ -63,26 +61,22 @@ func AddTodo(ctx context.Context, db *redis.Client, usr string, td Todo) error {
 		HmapKeyTodoSeverity, td.Severity,
 		HmapKeyTodoPriority, td.Priority,
 		HmapKeyTodoState, td.State,
-		HmapKeyTodoCreatedAt, td.Created_at,
-		HmapKeyTodoDeletedAt, td.Deleted_at).Err()
+		HmapKeyTodoCreatedAt, td.Created_at).Err()
 
 	if err != nil {
 		return &response.DataStoreError{Message: response.ErrorFailedToAddTodo.Error()}
 	}
 
-	// Getting the list of todoId from userhashmap
 	todoListFromUserHash, err := db.HMGet(ctx, usr, HmapKeyUserTodos).Result()
 	if err != nil {
 		return err
 	}
 
-	// Adding the list of todoId with the a todoId
 	todos, err := updateUserHashTodo(todoListFromUserHash, todoId)
 	if err != nil {
 		return err
 	}
 
-	// Adding todoId to userhashmap
 	err = db.HMSet(ctx, usr, HmapKeyUserTodos, todos).Err()
 
 	if err != nil {
@@ -211,7 +205,6 @@ func UpdateTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 	return nil
 }
 
-// got bug when i remove the first todoList
 func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string) error {
 	key := usr + ":todo:" + todoId
 
@@ -241,7 +234,6 @@ func RemoveTodo(ctx context.Context, db *redis.Client, usr string, todoId string
 		return err
 	}
 
-	// updating the listOfTodoId
 	todoFromUserHash, err := db.HGet(ctx, usr, HmapKeyUserTodos).Result()
 	if len(todoFromUserHash) == 0 {
 		return &response.DataStoreError{Message: response.ErrorFailedToUpdateUserTodo.Error()}

@@ -16,7 +16,6 @@ type User struct {
 	Email      string    `json:"email"`
 	Picture    string    `json:"picture"`
 	Created_at time.Time `json:"created_at"`
-	Deleted_at time.Time `json:"deleted_at"`
 	Todo_lists []string  `json:"todo_list"`
 }
 
@@ -26,7 +25,6 @@ const (
 	HmapKeyUserEmail     = "email"
 	HmapKeyUserPicture   = "picture"
 	HmapKeyUserCreatedAt = "created_at"
-	HmapKeyUserDeletedAt = "deleted_at"
 	HmapKeyUserTodos     = "todosId"
 )
 
@@ -38,8 +36,7 @@ func AddUser(ctx context.Context, db *redis.Client, usr User) error {
 		HmapKeyUserPassword, usr.Password,
 		HmapKeyUserEmail, usr.Email,
 		HmapKeyUserPicture, usr.Picture,
-		HmapKeyUserCreatedAt, time.Now(),
-		HmapKeyUserDeletedAt, usr.Deleted_at).Err()
+		HmapKeyUserCreatedAt, time.Now()).Err()
 
 	if err != nil {
 		return &response.DataStoreError{Message: err.Error()}
@@ -117,8 +114,3 @@ func AddUserPicture(ctx context.Context, db *redis.Client, usr string, pict stri
 
 	return nil
 }
-
-// func UploadPict(ctx context.Context, db *redis.Client, usr string, picName string) error {
-
-// 	return nil
-// }

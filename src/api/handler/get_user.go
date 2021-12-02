@@ -21,7 +21,6 @@ type GetUserResponse struct {
 	Email      string    `json:"email"`
 	Picture    string    `json:"picture"`
 	Created_at time.Time `json:"created_at"`
-	Deleted_at time.Time `json:"deleted_at"`
 	Todo_lists []string  `json:"todo_list"`
 }
 
@@ -42,7 +41,6 @@ func GetUser(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 			Name:       res.Name,
 			Email:      res.Email,
 			Created_at: res.Created_at,
-			Deleted_at: res.Deleted_at,
 			Picture:    res.Picture,
 			Todo_lists: res.Todo_lists,
 		}
