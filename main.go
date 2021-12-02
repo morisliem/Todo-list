@@ -17,8 +17,8 @@ var (
 
 func main() {
 
-	router.Post("/register", handler.RegisterUser(ctx, rdb))
-	router.Post("/login", handler.LoginUser(ctx, rdb))
+	router.Post("/auth/register", handler.RegisterUser(ctx, rdb))
+	router.Post("/auth/login", handler.LoginUser(ctx, rdb))
 	router.Post("/users/{username}/logout", handler.LogoutUser(ctx, rdb))
 	router.Post("/users/{username}/workflow", handler.AddWorkflow(ctx, rdb))
 	router.Post("/users/{username}/todos", handler.AddTodo(ctx, rdb))

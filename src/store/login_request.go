@@ -16,7 +16,7 @@ func LoginUser(ctx context.Context, db *redis.Client, usr LoginRequest) error {
 	password, err := db.HGet(ctx, usr.Username, HmapKeyUserPassword).Result()
 
 	if len(password) == 0 {
-		return &response.BadInputError{Message: response.ErrorUserNotFound.Error()}
+		return &response.NotFoundError{Message: response.ErrorUserNotFound.Error()}
 	}
 
 	if password != usr.Password {

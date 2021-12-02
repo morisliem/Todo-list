@@ -53,7 +53,7 @@ func AddPicture(ctx context.Context, rdb *redis.Client) http.HandlerFunc {
 }
 
 func SavePicture(w http.ResponseWriter, r *http.Request, usr string) (string, error) {
-	err := r.ParseMultipartForm(32 << 20)
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		response.BadRequest(w, r, response.Response(response.ErrorToParsePicture.Error()))
 		log.Error().Err(err).Msg(response.ErrorToParsePicture.Error())
