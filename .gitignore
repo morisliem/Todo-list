@@ -1,4 +1,4 @@
-.DS_Store
 .env
 go.mod
 go.sum
+.DS_Store
